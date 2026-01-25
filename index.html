@@ -567,11 +567,15 @@
             border-radius: 25px;
             box-shadow: 0 4px 15px var(--shadow);
             z-index: 1000;
-            transition: transform 0.3s;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease-in-out;
         }
 
         .toast.show {
             transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            visibility: visible;
         }
 
         /* Cabeçalho de Boas-vindas */
@@ -1562,6 +1566,36 @@
             especifica: ''
         };
 
+        // Função de sanitização para prevenir XSS
+        function sanitizarTexto(texto) {
+            if (!texto) return '';
+            const div = document.createElement('div');
+            div.textContent = texto;
+            return div.innerHTML
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#x27;')
+                .replace(/\//g, '&#x2F;');
+        }
+
+        function desanitizarTexto(texto) {
+            if (!texto) return '';
+            const div = document.createElement('div');
+            div.innerHTML = texto;
+            return div.textContent;
+        }
+
+        // Flag de produção - true para desabilitar logs
+        const PRODUCTION_MODE = false; // Mude para true em produção
+
+        // Wrapper para console.log que respeita modo de produção
+        const debugLog = (...args) => {
+            if (!PRODUCTION_MODE) {
+                console.log(...args);
+            }
+        };
+
         function inicializarApp() {
             const agora = new Date();
             agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
@@ -1598,7 +1632,7 @@
             emocaoSelecionada.central = nome;
             emocaoSelecionada.intermediaria = '';
             emocaoSelecionada.especifica = '';
-                
+
             // Mostrar emoções intermediárias
             const intermediariasDiv = document.getElementById('intermediariasDiv');
             const intermediarias = Object.keys(emocoesHierarquia[nome].intermediarias);
@@ -1617,7 +1651,7 @@
                     </div>
                 </div>
             `;
-            
+
             // Limpar emoções específicas
             document.getElementById('especificasDiv').innerHTML = '';
         }
@@ -1669,12 +1703,12 @@
 
         function atualizarSlidersIntensidade() {
             const intensidadesDiv = document.getElementById('intensidadesDiv');
-            
+
             if (emocoesSelecionadas.length === 0) {
                 intensidadesDiv.innerHTML = '';
                 return;
             }
-            
+
             intensidadesDiv.innerHTML = `
                 <label><span class="emoji">🏚️</span> Intensidade de cada emoção (0-10)</label>
                 <small style="color: var(--text-secondary); font-size: 11px; display: block; margin-bottom: 12px;">
@@ -1689,9 +1723,9 @@
                                 <span style="font-weight: 600; color: ${cor};"><span style="font-size: 18px;">${emoji}</span> ${emocao.central}</span>
                                 <span style="font-weight: bold; font-size: 18px; color: ${cor};" id="intensidadeValor${index}">${emocao.intensidade || 5}</span>
                             </div>
-                            <input type="range" min="0" max="10" value="${emocao.intensidade || 5}" 
-                                   class="intensity-slider" 
-                                   style="width: 100%;" 
+                            <input type="range" min="0" max="10" value="${emocao.intensidade || 5}"
+                                   class="intensity-slider"
+                                   style="width: 100%;"
                                    oninput="atualizarIntensidadeEmocao(${index}, this.value)">
                         </div>
                     `;
@@ -1731,12 +1765,12 @@
 
         function salvarRegistro() {
             const dataHora = document.getElementById('dataHora').value;
-            const situacao = document.getElementById('situacao').value.trim();
-            const pensamento = document.getElementById('pensamento').value.trim();
-            const intensidade = document.getElementById('intensidade').value;
-            const comportamento = document.getElementById('comportamento').value.trim();
+            const situacaoRaw = document.getElementById('situacao').value.trim();
+            const pensamentoRaw = document.getElementById('pensamento').value.trim();
+            const intensidade = parseInt(document.getElementById('intensidade').value, 10);
+            const comportamentoRaw = document.getElementById('comportamento').value.trim();
 
-            if (!dataHora || !situacao || !pensamento || !emocaoSelecionada.central || !comportamento) {
+            if (!dataHora || !situacaoRaw || !pensamentoRaw || !emocaoSelecionada.central || !comportamentoRaw) {
                 mostrarToast('⚠️ Preencha todos os campos e selecione uma emoção!');
                 return;
             }
@@ -1745,6 +1779,11 @@
                 mostrarToast('⚠️ Você precisa estar logado para salvar!');
                 return;
             }
+
+            // Sanitizar todos os inputs de texto
+            const situacao = sanitizarTexto(situacaoRaw);
+            const pensamento = sanitizarTexto(pensamentoRaw);
+            const comportamento = sanitizarTexto(comportamentoRaw);
 
             const registro = {
                 id: Date.now(),
@@ -1759,13 +1798,13 @@
             };
 
             // Salvar APENAS no Firebase
-            console.log('☁️ Salvando registro no Firebase...');
+            debugLog('☁️ Salvando registro no Firebase...');
             salvarRegistroFirebase(registro).then(firebaseId => {
                 if (firebaseId) {
                     // Adicionar à memória local
                     registro.firebaseId = firebaseId;
                     registrosEmMemoria.push(registro);
-                    console.log('✅ Registro salvo com sucesso! Firebase ID:', firebaseId);
+                    debugLog('✅ Registro salvo com sucesso! Firebase ID:', firebaseId);
                     document.getElementById('syncStatus').textContent = '✓ Sincronizado';
                 } else {
                     mostrarToast('❌ Erro ao salvar no Firebase');
@@ -1831,17 +1870,102 @@
                 return;
             }
 
-            // Adicionar botões de seleção
+
+            // Ler valores atuais dos filtros (preservar seleção entre renderizações)
+            const storedFiltroEmocao = localStorage.getItem('filtroEmocao') || '';
+            const storedFiltroMes = localStorage.getItem('filtroMes') || '';
+            const storedFiltroDia = localStorage.getItem('filtroDia') || '';
+            const storedFiltroAno = localStorage.getItem('filtroAno') || '';
+            const storedFiltroTexto = localStorage.getItem('filtroTexto') || '';
+
+            const filtroEmocaoAtual = (document.getElementById('filtroEmocao') && document.getElementById('filtroEmocao').value) || storedFiltroEmocao || '';
+            const filtroMesAtual = (document.getElementById('filtroMes') && document.getElementById('filtroMes').value) || storedFiltroMes || '';
+            const filtroDiaAtual = (document.getElementById('filtroDia') && document.getElementById('filtroDia').value) || storedFiltroDia || '';
+            const filtroAnoAtual = (document.getElementById('filtroAno') && document.getElementById('filtroAno').value) || storedFiltroAno || '';
+            const filtroTextoAtual = (document.getElementById('filtroTexto') && document.getElementById('filtroTexto').value) || storedFiltroTexto || '';
+
+            // Construir opções dinâmicas para filtros a partir dos registros
+            const emocoesUnicas = Array.from(new Set(registros.map(r => (r.emocaoCentral || r.emocao || 'Não especificada'))));
+            const anosUnicos = Array.from(new Set(registros.map(r => new Date(r.dataHora).getFullYear()))).sort((a,b) => b-a);
+            const mesesUnicos = Array.from(new Set(registros.map(r => new Date(r.dataHora).getMonth()+1))).sort((a,b) => a-b);
+            const diasUnicos = Array.from(new Set(registros.map(r => new Date(r.dataHora).getDate()))).sort((a,b) => a-b);
+
+            const escapeHtml = (s) => (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+
+            const emocaoOptions = ['<option value="">Todas</option>'].concat(emocoesUnicas.map(e => `<option value="${escapeHtml(e)}" ${e===filtroEmocaoAtual? 'selected': ''}>${escapeHtml(e)}</option>`)).join('');
+            const mesOptions = ['<option value="">Todos</option>'].concat(mesesUnicos.map(m => `<option value="${m}" ${m.toString()===filtroMesAtual? 'selected': ''}>${m.toString().padStart(2,'0')}</option>`)).join('');
+            const diaOptions = ['<option value="">Todos</option>'].concat(diasUnicos.map(d => `<option value="${d}" ${d.toString()===filtroDiaAtual? 'selected': ''}>${d.toString().padStart(2,'0')}</option>`)).join('');
+            const anoOptions = ['<option value="">Todos</option>'].concat(anosUnicos.map(y => `<option value="${y}" ${y.toString()===filtroAnoAtual? 'selected': ''}>${y}</option>`)).join('');
+
+            // Barra de filtros + seleção
             const headerSelecao = `
-                <div style="margin-bottom: 15px; padding: 10px; background: var(--background-secondary); border-radius: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <span style="font-weight: 600;">📝 Seleção:</span>
-                    <button class="btn btn-secondary" onclick="selecionarTodos()" style="padding: 5px 12px; font-size: 13px;">✅ Todos</button>
-                    <button class="btn btn-secondary" onclick="deselecionarTodos()" style="padding: 5px 12px; font-size: 13px;">❌ Nenhum</button>
-                    <span style="margin-left: auto; color: var(--text-secondary); font-size: 13px;" id="contadorSelecionados"></span>
+                <div style="margin-bottom: 12px; padding: 10px; background: var(--background-secondary); border-radius: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <label style="font-weight:600;">Filtro:</label>
+                        <select id="filtroEmocao" onchange="carregarHistorico()" style="padding:6px;">
+                            ${emocaoOptions}
+                        </select>
+                        <select id="filtroMes" onchange="carregarHistorico()" style="padding:6px;">
+                            ${mesOptions}
+                        </select>
+                        <select id="filtroDia" onchange="carregarHistorico()" style="padding:6px;">
+                            ${diaOptions}
+                        </select>
+                        <select id="filtroAno" onchange="carregarHistorico()" style="padding:6px;">
+                            ${anoOptions}
+                        </select>
+                        <input id="filtroTexto" placeholder="Buscar texto..." oninput="carregarHistorico()" style="padding:6px; min-width:180px;" value="${escapeHtml(filtroTextoAtual)}" />
+                    </div>
+                    <div style="margin-left: auto; display:flex; gap:8px; align-items:center;">
+                        <button class="btn btn-secondary" onclick="selecionarTodos()" style="padding: 5px 12px; font-size: 13px;">✅ Todos</button>
+                        <button class="btn btn-secondary" onclick="deselecionarTodos()" style="padding: 5px 12px; font-size: 13px;">❌ Nenhum</button>
+                        <span style="color: var(--text-secondary); font-size: 13px;" id="contadorSelecionados"></span>
+                    </div>
                 </div>
             `;
 
-            lista.innerHTML = headerSelecao + registros.map(r => {
+            // Aplicar filtros selecionados
+            const filtroEmocao = filtroEmocaoAtual || '';
+            const filtroMes = filtroMesAtual || '';
+            const filtroDia = filtroDiaAtual || '';
+            const filtroAno = filtroAnoAtual || '';
+            const filtroTexto = (filtroTextoAtual && filtroTextoAtual.toLowerCase()) || '';
+
+            const registrosFiltrados = registros.filter(r => {
+                const emocao = (r.emocaoCentral || r.emocao || 'Não especificada');
+                const data = new Date(r.dataHora);
+                const mes = (data.getMonth()+1).toString();
+                const dia = data.getDate().toString();
+                const ano = data.getFullYear().toString();
+
+                if (filtroEmocao && emocao !== filtroEmocao) return false;
+                if (filtroMes && mes !== filtroMes) return false;
+                if (filtroDia && dia !== filtroDia) return false;
+                if (filtroAno && ano !== filtroAno) return false;
+
+                if (filtroTexto) {
+                    const s = (desanitizarTexto(r.situacao) || '').toLowerCase();
+                    const p = (desanitizarTexto(r.pensamento) || '').toLowerCase();
+                    const c = (desanitizarTexto(r.comportamento) || '').toLowerCase();
+                    const e = (emocao || '').toLowerCase();
+                    if (!(s.includes(filtroTexto) || p.includes(filtroTexto) || c.includes(filtroTexto) || e.includes(filtroTexto))) return false;
+                }
+
+                return true;
+            });
+
+            // Persistir seleção de filtros no localStorage para próxima visita
+            try {
+                localStorage.setItem('filtroEmocao', filtroEmocao);
+                localStorage.setItem('filtroMes', filtroMes);
+                localStorage.setItem('filtroDia', filtroDia);
+                localStorage.setItem('filtroAno', filtroAno);
+                localStorage.setItem('filtroTexto', filtroTexto || '');
+            } catch (e) {
+                // Ignorar falhas de storage em ambientes restritos
+            }
+
+            lista.innerHTML = headerSelecao + registrosFiltrados.map(r => {
                 const data = new Date(r.dataHora);
                 const dataFormatada = data.toLocaleDateString('pt-BR');
                 const horaFormatada = data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
@@ -1849,6 +1973,11 @@
                 const emocao = r.emocaoCentral || r.emocao || 'Não especificada';
                 const cor = emocoesCores[emocao] || '#667eea';
                 const emojiEmocao = emocoesHierarquia[emocao]?.emoji || '❤️';
+
+                // Desanitizar para exibição
+                const situacaoExibir = desanitizarTexto(r.situacao);
+                const pensamentoExibir = desanitizarTexto(r.pensamento);
+                const comportamentoExibir = desanitizarTexto(r.comportamento);
 
                 return `
                     <div class="entry-card" data-id="${r.id}">
@@ -1864,12 +1993,12 @@
 
                         <div class="entry-field">
                             <strong>Situação</strong>
-                            <p>${r.situacao}</p>
+                            <p>${situacaoExibir}</p>
                         </div>
 
                         <div class="entry-field">
                             <strong>Pensamento Automático</strong>
-                            <p>${r.pensamento}</p>
+                            <p>${pensamentoExibir}</p>
                         </div>
 
                         <div class="entry-field">
@@ -1889,12 +2018,12 @@
 
                         <div class="entry-field">
                             <strong>Comportamento</strong>
-                            <p>${r.comportamento}</p>
+                            <p>${comportamentoExibir}</p>
                         </div>
                     </div>
                 `;
             }).join('');
-            
+
             // Atualizar contador ao carregar e ao mudar checkboxes
             atualizarContadorSelecionados();
             document.querySelectorAll('.registro-checkbox').forEach(cb => {
@@ -1939,11 +2068,11 @@
             }
 
             // Deletar APENAS do Firebase
-            console.log('☁️ Excluindo registro do Firebase...', firebaseId);
+            debugLog('☁️ Excluindo registro do Firebase...', firebaseId);
             excluirRegistroFirebase(firebaseId).then(() => {
                 // Remover da memória
                 registrosEmMemoria = registrosEmMemoria.filter(r => r.id !== id);
-                console.log('✅ Registro excluído do Firebase!');
+                debugLog('✅ Registro excluído do Firebase!');
                 carregarHistorico();
                 atualizarEstatisticas();
                 mostrarToast('🗑️ Registro deletado');
@@ -2143,7 +2272,7 @@
                 let emocaoTexto = r.emocaoCentral || '';
                 if (r.emocaoIntermediaria) emocaoTexto += ' > ' + r.emocaoIntermediaria;
                 if (r.emocaoEspecifica) emocaoTexto += ' > ' + r.emocaoEspecifica;
-                
+
                 const linha = [
                     data.toLocaleDateString('pt-BR'),
                     data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
@@ -2235,7 +2364,14 @@
             const toast = document.getElementById('toast');
             toast.textContent = mensagem;
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+
+            // Remover toast anterior se existir
+            clearTimeout(window.toastTimeout);
+
+            // Agendar remoção do toast após 3 segundos
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
         }
 
         // ===== CONFIGURAÇÃO DO FIREBASE =====
@@ -2255,14 +2391,14 @@
 
         // Mostrar tela de login imediatamente se der erro
         function showLoginFallback() {
-            console.log('🔓 Mostrando tela de login');
+            debugLog('🔓 Mostrando tela de login');
             document.getElementById('loadingScreen').classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
         }
 
         // Tentar inicializar Firebase
         try {
-            console.log('🔄 Tentando inicializar Firebase...');
+            debugLog('🔄 Tentando inicializar Firebase...');
 
             if (typeof firebase === 'undefined') {
                 console.error('❌ Firebase não disponível');
@@ -2272,18 +2408,18 @@
                 auth = firebase.auth();
                 db = firebase.firestore();
 
-                console.log('✅ Firebase inicializado com sucesso');
+                debugLog('✅ Firebase inicializado com sucesso');
 
                 // Verificar autenticação - onAuthStateChanged é chamado imediatamente
                 auth.onAuthStateChanged(async user => {
-                    console.log('👤 Estado de autenticação:', user ? 'Logado' : 'Deslogado');
+                    debugLog('👤 Estado de autenticação:', user ? 'Logado' : 'Deslogado');
 
                     // Garantir que esconde o loading
                     const loadingEl = document.getElementById('loadingScreen');
                     if (loadingEl) loadingEl.classList.add('hidden');
 
                     if (user) {
-                        console.log('✅ Usuário autenticado:', user.email);
+                        debugLog('✅ Usuário autenticado:', user.email);
                         currentUser = user;
 
                         // Carregar perfil do usuário
@@ -2291,7 +2427,7 @@
 
                         // Se o perfil não existir, criar um perfil básico
                         if (!perfil) {
-                            console.log('⚠️ Perfil não encontrado, criando perfil básico...');
+                            debugLog('⚠️ Perfil não encontrado, criando perfil básico...');
                             const perfilBasico = {
                                 email: user.email,
                                 nomeCompleto: user.displayName || user.email.split('@')[0],
@@ -2304,7 +2440,7 @@
                             try {
                                 await db.collection('usuarios').doc(user.uid).set(perfilBasico);
                                 perfil = perfilBasico;
-                                console.log('✅ Perfil básico criado');
+                                debugLog('✅ Perfil básico criado');
                             } catch (error) {
                                 console.error('❌ Erro ao criar perfil básico:', error);
                             }
@@ -2314,7 +2450,7 @@
                                 await db.collection('usuarios').doc(user.uid).update({
                                     ultimaAtividade: firebase.firestore.FieldValue.serverTimestamp()
                                 });
-                                console.log('✅ Última atividade atualizada');
+                                debugLog('✅ Última atividade atualizada');
                             } catch (error) {
                                 console.error('⚠️ Erro ao atualizar última atividade:', error);
                             }
@@ -2338,7 +2474,7 @@
                         showApp();
                         carregarDadosFirebase().catch(err => console.warn('Erro ao carregar dados:', err));
                     } else {
-                        console.log('❌ Usuário não autenticado');
+                        debugLog('❌ Usuário não autenticado');
                         showLogin();
                     }
                 });
@@ -2444,7 +2580,7 @@
         }
 
         function showApp() {
-            console.log('📱 Mostrando app...');
+            debugLog('📱 Mostrando app...');
             document.getElementById('loadingScreen').classList.add('hidden');
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('appScreen').classList.remove('hidden');
@@ -2463,11 +2599,11 @@
             inicializarApp();
             atualizarSaudacao();
             atualizarDataHora();
-            console.log('✅ App inicializado!');
+            debugLog('✅ App inicializado!');
         }
 
         function showLogin() {
-            console.log('🔐 Mostrando tela de login...');
+            debugLog('🔐 Mostrando tela de login...');
             document.getElementById('loadingScreen').classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
             document.getElementById('appScreen').classList.add('hidden');
@@ -2508,7 +2644,7 @@
             const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('passwordInput').value;
 
-            console.log('🔑 Tentando autenticar...', { email, mode: isLoginMode ? 'login' : 'criar' });
+            debugLog('🔑 Tentando autenticar...', { email, mode: isLoginMode ? 'login' : 'criar' });
 
             if (!email || !password) {
                 showError('Preencha email e senha');
@@ -2539,12 +2675,12 @@
             try {
                 // Garantir persistência LOCAL antes de fazer login
                 await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-                console.log('🔒 Persistência LOCAL ativada');
+                debugLog('🔒 Persistência LOCAL ativada');
 
                 if (isLoginMode) {
-                    console.log('📧 Fazendo login...');
+                    debugLog('📧 Fazendo login...');
                     const result = await auth.signInWithEmailAndPassword(email, password);
-                    console.log('✅ Login realizado:', result.user.email);
+                    debugLog('✅ Login realizado:', result.user.email);
 
                     // Verificar se usuário está ativo
                     const perfilDoc = await db.collection('usuarios').doc(result.user.uid).get();
@@ -2558,9 +2694,9 @@
                         }
                     }
                 } else {
-                    console.log('📝 Criando conta...');
+                    debugLog('📝 Criando conta...');
                     const result = await auth.createUserWithEmailAndPassword(email, password);
-                    console.log('✅ Conta criada:', result.user.email);
+                    debugLog('✅ Conta criada:', result.user.email);
 
                     // Salvar informações adicionais do usuário
                     await salvarPerfilUsuario(result.user.uid);
@@ -2601,7 +2737,7 @@
             try {
                 // Garantir persistência LOCAL antes de fazer login
                 await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-                console.log('🔒 Persistência LOCAL ativada (Google)');
+                debugLog('🔒 Persistência LOCAL ativada (Google)');
 
                 const provider = new firebase.auth.GoogleAuthProvider();
                 await auth.signInWithPopup(provider);
@@ -2640,7 +2776,7 @@
                     });
                 }
 
-                console.log('✅ Perfil do usuário salvo com sucesso');
+                debugLog('✅ Perfil do usuário salvo com sucesso');
             } catch (error) {
                 console.error('❌ Erro ao salvar perfil:', error);
                 // Não bloquear o cadastro por falha ao salvar perfil
@@ -2739,11 +2875,11 @@
             if (!confirm('Deseja realmente sair?')) return;
 
             try {
-                console.log('🚪 Fazendo logout...');
+                debugLog('🚪 Fazendo logout...');
 
                 if (auth) {
                     await auth.signOut();
-                    console.log('✅ Logout realizado com sucesso');
+                    debugLog('✅ Logout realizado com sucesso');
                 }
 
                 // Limpar dados da memória por segurança
@@ -2812,7 +2948,7 @@
                     email: currentUser.email
                 };
 
-                console.log('✅ Perfil carregado para usuário:', currentUser.email, 'UID:', currentUser.uid);
+                debugLog('✅ Perfil carregado para usuário:', currentUser.email, 'UID:', currentUser.uid);
             } catch (error) {
                 console.error('❌ Erro ao carregar perfil:', error);
                 mostrarToast('❌ Erro ao carregar perfil');
@@ -2826,8 +2962,8 @@
                 return;
             }
 
-            console.log('🔍 Tentando editar perfil. CurrentUser:', currentUser.email, currentUser.uid);
-            console.log('🔍 PerfilAtual:', window.perfilAtual);
+            debugLog('🔍 Tentando editar perfil. CurrentUser:', currentUser.email, currentUser.uid);
+            debugLog('🔍 PerfilAtual:', window.perfilAtual);
 
             // Validar que o perfilAtual pertence ao usuário logado
             if (window.perfilAtual && window.perfilAtual.uid && window.perfilAtual.uid !== currentUser.uid) {
@@ -2855,7 +2991,7 @@
             document.getElementById('editDataNascimento').value = perfil.dataNascimento || '';
             document.getElementById('editGenero').value = perfil.genero || '';
 
-            console.log('✅ Modo de edição habilitado para:', currentUser.email);
+            debugLog('✅ Modo de edição habilitado para:', currentUser.email);
 
             // Alternar visualização
             document.getElementById('profileViewMode').style.display = 'none';
@@ -2897,7 +3033,7 @@
                     return;
                 }
 
-                console.log('📝 Atualizando perfil...');
+                debugLog('📝 Atualizando perfil...');
 
                 // Carregar perfil atual para preservar o role
                 const perfilAtual = await carregarPerfilUsuario(currentUser.uid);
@@ -2922,7 +3058,7 @@
                     });
                 }
 
-                console.log('✅ Perfil atualizado com sucesso');
+                debugLog('✅ Perfil atualizado com sucesso');
                 mostrarToast('✅ Perfil atualizado com sucesso!');
 
                 // Recarregar perfil na tela
@@ -2957,7 +3093,7 @@
             }
 
             try {
-                console.log('🗑️ Excluindo conta...');
+                debugLog('🗑️ Excluindo conta...');
                 const uid = currentUser.uid;
 
                 // 1. Deletar todos os registros do usuário
@@ -2969,15 +3105,15 @@
                     batch.delete(doc.ref);
                 });
                 await batch.commit();
-                console.log('✅ Registros excluídos');
+                debugLog('✅ Registros excluídos');
 
                 // 2. Deletar perfil do usuário
                 await db.collection('usuarios').doc(uid).delete();
-                console.log('✅ Perfil excluído');
+                debugLog('✅ Perfil excluído');
 
                 // 3. Deletar conta do Firebase Auth
                 await currentUser.delete();
-                console.log('✅ Conta excluída do Firebase Auth');
+                debugLog('✅ Conta excluída do Firebase Auth');
 
                 // Limpar dados locais
                 registrosEmMemoria = [];
@@ -3047,7 +3183,7 @@
                     document.getElementById('adminTab').style.display = 'block';
                     // Carregar dashboard automaticamente
                     carregarDashboardAdmin();
-                    console.log('✅ Usuário é admin - aba administrativa habilitada');
+                    debugLog('✅ Usuário é admin - aba administrativa habilitada');
                 }
             } catch (error) {
                 console.error('❌ Erro ao verificar admin:', error);
@@ -3064,7 +3200,7 @@
             }
 
             try {
-                console.log('📊 Carregando dashboard administrativo...');
+                debugLog('📊 Carregando dashboard administrativo...');
 
                 // Buscar todos os usuários
                 const usuariosSnapshot = await db.collection('usuarios').get();
@@ -3109,7 +3245,7 @@
                 document.getElementById('totalRegistros').textContent = totalRegistros;
                 document.getElementById('usuariosInativos').textContent = usuariosInativos;
 
-                console.log('✅ Dashboard carregado:', {
+                debugLog('✅ Dashboard carregado:', {
                     total: totalUsuarios,
                     ativos: usuariosAtivos,
                     registros: totalRegistros,
@@ -3130,7 +3266,7 @@
             }
 
             try {
-                console.log('📋 Carregando lista de usuários...');
+                debugLog('📋 Carregando lista de usuários...');
                 const usuariosRef = db.collection('usuarios');
                 const snapshot = await usuariosRef.get();
 
@@ -3246,7 +3382,7 @@
             }
 
             try {
-                console.log('🗑️ Excluindo usuário:', uid);
+                debugLog('🗑️ Excluindo usuário:', uid);
 
                 // 1. Deletar todos os registros do usuário
                 const registrosRef = db.collection('usuarios').doc(uid).collection('registros');
@@ -3257,16 +3393,16 @@
                     batch.delete(doc.ref);
                 });
                 await batch.commit();
-                console.log('✅ Registros do usuário excluídos');
+                debugLog('✅ Registros do usuário excluídos');
 
                 // 2. Deletar perfil do usuário
                 await db.collection('usuarios').doc(uid).delete();
-                console.log('✅ Perfil do usuário excluído');
+                debugLog('✅ Perfil do usuário excluído');
 
                 // NOTA: Não podemos deletar a conta do Firebase Auth pelo lado do cliente
                 // Isso requer Firebase Admin SDK no servidor
-                console.log('⚠️ IMPORTANTE: A conta no Firebase Auth não foi removida.');
-                console.log('   Para remover completamente, use o Console do Firebase ou Admin SDK');
+                debugLog('⚠️ IMPORTANTE: A conta no Firebase Auth não foi removida.');
+                debugLog('   Para remover completamente, use o Console do Firebase ou Admin SDK');
 
                 mostrarToast('✅ Dados do usuário excluídos do Firestore');
 
@@ -3331,7 +3467,7 @@
                     return;
                 }
 
-                console.log('👤 Criando novo usuário...');
+                debugLog('👤 Criando novo usuário...');
 
                 // IMPORTANTE: Como admin não pode criar usuários diretamente no Firebase Auth do lado do cliente,
                 // vamos criar apenas o perfil no Firestore
@@ -3355,7 +3491,7 @@
 
                 await db.collection('usuarios').doc(tempUserId).set(perfil);
 
-                console.log('✅ Perfil criado com sucesso');
+                debugLog('✅ Perfil criado com sucesso');
 
                 alert(`✅ Usuário criado com sucesso!\n\nInforme ao usuário:\n\nEmail: ${email}\nSenha: ${senha}\n\nO usuário deve fazer o cadastro normal usando esses dados.`);
 
@@ -3379,7 +3515,7 @@
             }
 
             try {
-                console.log('📝 Carregando dados do usuário:', uid);
+                debugLog('📝 Carregando dados do usuário:', uid);
 
                 // Carregar dados do usuário
                 const doc = await db.collection('usuarios').doc(uid).get();
@@ -3439,7 +3575,7 @@
                     return;
                 }
 
-                console.log('💾 Salvando alterações do usuário:', uid);
+                debugLog('💾 Salvando alterações do usuário:', uid);
 
                 // Atualizar no Firestore
                 const perfilAtualizado = {
@@ -3454,7 +3590,7 @@
 
                 await db.collection('usuarios').doc(uid).update(perfilAtualizado);
 
-                console.log('✅ Usuário atualizado com sucesso');
+                debugLog('✅ Usuário atualizado com sucesso');
                 mostrarToast('✅ Usuário atualizado com sucesso!');
 
                 // Ocultar formulário
@@ -3488,7 +3624,7 @@
                         proprietario: currentUser.uid
                     });
 
-                console.log('✅ Registro salvo no Firebase com ID:', docRef.id);
+                debugLog('✅ Registro salvo no Firebase com ID:', docRef.id);
                 document.getElementById('syncStatus').textContent = '✓ Sincronizado';
                 document.getElementById('syncStatus').style.color = 'var(--success)';
 
@@ -3511,7 +3647,7 @@
             }
 
             try {
-                console.log('📥 Carregando dados do Firebase...');
+                debugLog('📥 Carregando dados do Firebase...');
                 // SEGURANÇA: Buscar apenas dados do usuário autenticado
                 const snapshot = await db.collection('usuarios').doc(currentUser.uid)
                     .collection('registros')
@@ -3544,7 +3680,7 @@
                 // SEGURANÇA: Filtrar registros nulos (que não passaram na validação)
                 const registrosValidos = registrosFirebase.filter(r => r !== null);
 
-                console.log(`✅ ${registrosValidos.length} registros carregados do Firebase`);
+                debugLog(`✅ ${registrosValidos.length} registros carregados do Firebase`);
 
                 // Salvar na memória
                 registrosEmMemoria = registrosValidos;
