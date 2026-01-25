@@ -604,6 +604,11 @@
             font-size: 18px;
         }
 
+        .loading.hidden,
+        .hidden {
+            display: none !important;
+        }
+
         .sync-status {
             font-size: 10px;
             color: var(--success);
@@ -1005,11 +1010,6 @@
             intermediaria: '',
             especifica: ''
         };
-
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', () => {
-            inicializarApp();
-        });
 
         function inicializarApp() {
             const agora = new Date();
@@ -1530,8 +1530,8 @@
             document.getElementById('loginScreen').classList.remove('hidden');
         }
 
-        // Timeout de segurança - FORÇA mostrar login após 1 segundo
-        setTimeout(showLoginFallback, 1000);
+        // Timeout de segurança - FORÇA mostrar login após 3 segundos
+        setTimeout(showLoginFallback, 3000);
 
         // Tentar inicializar Firebase
         try {
@@ -1561,12 +1561,20 @@
                     if (loadingEl) loadingEl.classList.add('hidden');
 
                     if (user) {
+                        console.log('✅ Usuário autenticado:', user.email);
                         currentUser = user;
-                        showApp();
-                        document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
-                        document.getElementById('userEmail').textContent = user.email;
+                        
+                        // Atualizar informações do usuário
+                        const userName = document.getElementById('userName');
+                        const userEmail = document.getElementById('userEmail');
+                        if (userName) userName.textContent = user.displayName || user.email.split('@')[0];
+                        if (userEmail) userEmail.textContent = user.email;
+                        
+                        // Carregar dados e mostrar app
                         carregarDadosFirebase();
+                        showApp();
                     } else {
+                        console.log('❌ Usuário não autenticado');
                         showLogin();
                     }
                 });
@@ -1577,13 +1585,24 @@
         }
 
         function showApp() {
+            console.log('📱 Mostrando app...');
+            document.getElementById('loadingScreen').classList.add('hidden');
             document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appScreen').classList.remove('hidden');
             document.getElementById('appScreen').classList.add('active');
+            
+            // Inicializar app (formulários, histórico, etc)
+            setTimeout(() => {
+                inicializarApp();
+                console.log('✅ App inicializado!');
+            }, 100);
         }
 
         function showLogin() {
+            console.log('🔐 Mostrando tela de login...');
             document.getElementById('loadingScreen').classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('appScreen').classList.add('hidden');
             document.getElementById('appScreen').classList.remove('active');
         }
 
@@ -1615,6 +1634,8 @@
             const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('passwordInput').value;
 
+            console.log('🔑 Tentando autenticar...', { email, mode: isLoginMode ? 'login' : 'criar' });
+
             if (!email || !password) {
                 showError('Preencha email e senha');
                 return;
@@ -1627,21 +1648,41 @@
 
             try {
                 if (isLoginMode) {
-                    await auth.signInWithEmailAndPassword(email, password);
+                    console.log('📧 Fazendo login...');
+                    const result = await auth.signInWithEmailAndPassword(email, password);
+                    console.log('✅ Login realizado:', result.user.email);
                 } else {
-                    await auth.createUserWithEmailAndPassword(email, password);
+                    console.log('📝 Criando conta...');
+                    const result = await auth.createUserWithEmailAndPassword(email, password);
+                    console.log('✅ Conta criada:', result.user.email);
                 }
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('❌ Erro completo:', error);
+                console.error('Código:', error.code);
+                console.error('Mensagem:', error.message);
+
                 const messages = {
                     'auth/email-already-in-use': 'Email já cadastrado',
                     'auth/invalid-email': 'Email inválido',
                     'auth/user-not-found': 'Usuário não encontrado',
                     'auth/wrong-password': 'Senha incorreta',
                     'auth/weak-password': 'Senha muito fraca',
-                    'auth/network-request-failed': 'Erro de conexão'
+                    'auth/network-request-failed': 'Erro de conexão',
+                    'auth/operation-not-allowed': '⚠️ Configure Authentication no Firebase Console',
+                    'auth/unauthorized-domain': '⚠️ Adicione "localhost" nos domínios autorizados do Firebase Console → Authentication → Settings → Authorized domains'
                 };
-                showError(messages[error.code] || 'Erro ao autenticar');
+
+                let errorMsg = messages[error.code] || error.message || 'Erro ao autenticar';
+
+                // Se for 400, pode ser domínio não autorizado
+                if (!error.code && error.message && error.message.includes('400')) {
+                    errorMsg = '⚠️ ERRO 400: Verifique no Firebase Console:\n' +
+                               '1. Authentication → Settings → Authorized domains → Adicione "localhost"\n' +
+                               '2. Ou teste usando o authDomain: diario-emocional-2c464.firebaseapp.com';
+                    console.error('💡 Solução: Adicione localhost nos domínios autorizados ou teste via Firebase Hosting');
+                }
+
+                showError(errorMsg);
             }
         }
 
