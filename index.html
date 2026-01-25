@@ -1530,8 +1530,8 @@
             document.getElementById('loginScreen').classList.remove('hidden');
         }
 
-        // Timeout de segurança - FORÇA mostrar login após 1 segundo
-        setTimeout(showLoginFallback, 1000);
+        // Timeout de segurança - FORÇA mostrar login após 3 segundos
+        setTimeout(showLoginFallback, 3000);
 
         // Tentar inicializar Firebase
         try {
@@ -1544,6 +1544,12 @@
                 app = firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
                 db = firebase.firestore();
+
+                // Ativar persistência de sessão
+                auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+                    .then(() => console.log('🔒 Sessão persistente ativada'))
+                    .catch(err => console.warn('⚠️ Erro persistência:', err));
+
                 console.log('✅ Firebase inicializado com sucesso');
 
                 // Verificar autenticação
@@ -1644,34 +1650,24 @@
 
         async function handleLogout() {
             if (!confirm('Deseja realmente sair?')) return;
-            
+
             try {
                 console.log('🚪 Fazendo logout...');
-                
+
                 if (auth) {
                     await auth.signOut();
+                    console.log('✅ Logout realizado com sucesso');
                 }
-                
-                // Limpar localStorage
-                localStorage.removeItem('registrosEmocionais');
-                
-                console.log('✅ Logout realizado - recarregando página...');
-                
-                // Recarregar página para limpar tudo
-                window.location.reload();
-                
+
+                // NÃO limpar localStorage - os dados devem permanecer
+                // Apenas mostrar tela de login
+                currentUser = null;
+                showLogin();
+
             } catch (error) {
                 console.error('❌ Erro ao sair:', error);
-                // Mesmo com erro, recarregar
-                window.location.reload();
-            }
-        }
-
-        // ===== INTEGRAÇÃO COM FIRESTORE =====
-
-        // Salvar registro no Firestore
-        async function salvarRegistroFirebase(registro) {
-            if (!currentUser) return;
+                currentUser = null;
+                showLogin();
 
             try {
                 await db.collection('usuarios').doc(currentUser.uid)
@@ -1733,14 +1729,22 @@
         // Sobrescrever função salvarRegistro original para usar Firebase
         const salvarRegistroOriginal = window.salvarRegistro;
         window.salvarRegistro = async function() {
+            console.log('💾 Salvando registro...');
+
             // Chamar função original que salva no localStorage
             salvarRegistroOriginal();
 
+            // Aguardar um pouco para garantir que salvou no localStorage
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             // Pegar o último registro salvo
             const registros = JSON.parse(localStorage.getItem('registrosEmocionais') || '[]');
-            if (registros.length > 0) {
+            if (registros.length > 0 && currentUser) {
                 const ultimoRegistro = registros[0]; // Mais recente
+                console.log('☁️ Sincronizando com Firebase...');
                 await salvarRegistroFirebase(ultimoRegistro);
+            } else if (!currentUser) {
+                console.warn('⚠️ Usuário não logado - dados salvos apenas localmente');
             }
         };
 
