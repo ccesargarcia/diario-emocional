@@ -194,14 +194,14 @@
             font-size: 28px;
             margin-bottom: 5px;
         }
-        
+
         .emocao-nome {
             font-weight: 600;
             font-size: 14px;
             display: block;
             margin-bottom: 3px;
         }
-        
+
         .emocao-explicacao {
             font-size: 10px;
             opacity: 0.85;
@@ -410,7 +410,7 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-    
+
         /* Tela de Login */
         .login-container {
             display: flex;
@@ -635,9 +635,9 @@
         <div class="login-box">
             <h1>📔 Diário Emocional</h1>
             <p>Faça login para acessar seus registros</p>
-            
+
             <div id="authError" class="error-message hidden"></div>
-            
+
             <div class="login-form">
                 <input type="email" id="emailInput" placeholder="Email" autocomplete="email">
                 <input type="password" id="passwordInput" placeholder="Senha" autocomplete="current-password">
@@ -645,9 +645,9 @@
                     <span id="authButtonText">Entrar</span>
                 </button>
             </div>
-            
+
             <div class="divider">ou</div>
-            
+
             <button class="btn-google" onclick="handleGoogleAuth()">
                 <svg width="20" height="20" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -657,7 +657,7 @@
                 </svg>
                 Continuar com Google
             </button>
-            
+
             <div class="toggle-auth">
                 <span id="toggleText">Não tem conta?</span>
                 <a onclick="toggleAuthMode()"><span id="toggleLink">Criar conta</span></a>
@@ -740,7 +740,7 @@
     <!-- TAB: EXPORTAR -->
     <div id="exportar" class="tab-content">
         <div class="stats-grid" id="statsGrid"></div>
-        
+
         <div class="export-section">
             <h3>📊 Exportar Dados</h3>
             <p style="color: var(--text-light); margin-bottom: 20px;">
@@ -864,7 +864,7 @@
             'Ressentimento': 'Mágoa guardada, sentimento de injustiça não resolvido',
             'Desespero': 'Perda de esperança, sensação de não haver saída',
             'Revoltado': 'Indignação extrema, rebeldia contra uma situação',
-            
+
             // Tristeza
             'Agoniado': 'Sofrimento intenso, angústia emocional profunda',
             'Machucado': 'Ferido emocionalmente, dor emocional por algo que aconteceu',
@@ -878,7 +878,7 @@
             'Solitário': 'Sentimento de solidão, falta de companhia',
             'Luto': 'Dor pela perda de alguém ou algo importante',
             'Impotência': 'Sensação de não ter poder para mudar a situação',
-            
+
             // Surpresa
             'Chocado': 'Impacto emocional forte, dificuldade de processar o inesperado',
             'Desiludido': 'Decepção ao perceber que algo não era como parecia',
@@ -889,7 +889,7 @@
             'Espantado': 'Surpreso de forma intensa, admirado',
             'Estimulado': 'Energizado e motivado por algo novo',
             'Tocado': 'Emocionalmente afetado de forma sensível',
-            
+
             // Alegria
             'Gozo': 'Prazer intenso, satisfação plena',
             'Saciado': 'Plenamente satisfeito, necessidades atendidas',
@@ -907,7 +907,7 @@
             'Euforia': 'Felicidade extrema, êxtase de alegria',
             'Êxtase': 'Estado máximo de prazer e alegria',
             'Sedução': 'Atração magnética, charme e encantamento',
-            
+
             // Amor
             'Pleno': 'Completude interior, paz e satisfação profunda',
             'Liberdade': 'Sensação de autonomia e ausência de restrições',
@@ -919,7 +919,7 @@
             'Sensível': 'Delicadeza emocional, receptividade afetiva',
             'Carinho': 'Afeto terno e gentil, ternura',
             'Romântico': 'Amor idealizado, valorização da beleza do relacionamento',
-            
+
             // Medo
             'Pavor': 'Terror extremo, medo paralisante',
             'Mortificado': 'Constrangimento profundo misturado com medo',
@@ -1025,11 +1025,11 @@
         function criarGridEmocoes() {
             const grid = document.getElementById('emotionsGrid');
             const emocoesCentrais = Object.keys(emocoesHierarquia);
-            
+
             grid.innerHTML = emocoesCentrais.map(nome => {
                 const cor = emocoesCores[nome];
                 return `
-                    <button class="emotion-btn" onclick="selecionarEmocaoCentral('${nome}', this)" 
+                    <button class="emotion-btn" onclick="selecionarEmocaoCentral('${nome}', this)"
                             style="border-color: ${cor}20; background: ${cor}10;">
                         <span class="emoji">${emocoesHierarquia[nome].emoji}</span>
                         ${nome}
@@ -1044,12 +1044,12 @@
             emocaoSelecionada.central = nome;
             emocaoSelecionada.intermediaria = '';
             emocaoSelecionada.especifica = '';
-            
+
             // Mostrar emoções intermediárias
             const intermediariasDiv = document.getElementById('intermediariasDiv');
             const intermediarias = Object.keys(emocoesHierarquia[nome].intermediarias);
             const cor = emocoesCores[nome];
-            
+
             intermediariasDiv.innerHTML = `
                 <div class="form-group">
                     <label><span class="emoji">🎯</span> Qual tipo de ${nome}?</label>
@@ -1063,7 +1063,7 @@
                     </div>
                 </div>
             `;
-            
+
             // Limpar emoções específicas
             document.getElementById('especificasDiv').innerHTML = '';
         }
@@ -1073,12 +1073,12 @@
             btn.classList.add('selected');
             emocaoSelecionada.intermediaria = nome;
             emocaoSelecionada.especifica = '';
-            
+
             // Mostrar emoções específicas
             const especificasDiv = document.getElementById('especificasDiv');
             const especificas = emocoesHierarquia[emocaoSelecionada.central].intermediarias[nome];
             const cor = emocoesCores[emocaoSelecionada.central];
-            
+
             especificasDiv.innerHTML = `
                 <div class="form-group">
                     <label><span class="emoji">🔍</span> Mais especificamente:</label>
@@ -1114,7 +1114,7 @@
         function showTab(tabName) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
+
             event.target.classList.add('active');
             document.getElementById(tabName).classList.add('active');
 
@@ -1169,7 +1169,7 @@
             };
             document.getElementById('intermediariasDiv').innerHTML = '';
             document.getElementById('especificasDiv').innerHTML = '';
-            
+
             const agora = new Date();
             agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
             document.getElementById('dataHora').value = agora.toISOString().slice(0, 16);
@@ -1197,7 +1197,7 @@
                 const data = new Date(r.dataHora);
                 const dataFormatada = data.toLocaleDateString('pt-BR');
                 const horaFormatada = data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
-                
+
                 // Suporte para registros antigos e novos
                 const emocaoCentral = r.emocaoCentral || r.emocao || 'Não especificada';
                 const emocaoIntermediaria = r.emocaoIntermediaria || '';
@@ -1213,17 +1213,17 @@
                                 <button class="icon-btn" onclick="deletarRegistro(${r.id})">🗑️</button>
                             </div>
                         </div>
-                        
+
                         <div class="entry-field">
                             <strong>Situação</strong>
                             <p>${r.situacao}</p>
                         </div>
-                        
+
                         <div class="entry-field">
                             <strong>Pensamento Automático</strong>
                             <p>${r.pensamento}</p>
                         </div>
-                        
+
                         <div class="entry-field">
                             <strong>Emoção e Intensidade</strong>
                             <div class="emotion-badge" style="background: ${cor}15; border: 2px solid ${cor}40; flex-wrap: wrap;">
@@ -1236,7 +1236,7 @@
                                 Intensidade: ${r.intensidade}/10
                             </div>
                         </div>
-                        
+
                         <div class="entry-field">
                             <strong>Comportamento</strong>
                             <p>${r.comportamento}</p>
@@ -1248,7 +1248,7 @@
 
         function deletarRegistro(id) {
             if (!confirm('Tem certeza que deseja deletar este registro?')) return;
-            
+
             const registros = getRegistros().filter(r => r.id !== id);
             localStorage.setItem('diarioEmocional', JSON.stringify(registros));
             carregarHistorico();
@@ -1259,18 +1259,18 @@
         function atualizarEstatisticas() {
             const registros = getRegistros();
             const total = registros.length;
-            
+
             let somaIntensidade = 0;
             const contagemEmocoes = {};
-            
+
             registros.forEach(r => {
                 somaIntensidade += parseInt(r.intensidade);
                 const emocao = r.emocaoCentral || r.emocao || 'Não especificada';
                 contagemEmocoes[emocao] = (contagemEmocoes[emocao] || 0) + 1;
             });
-            
+
             const mediaIntensidade = total > 0 ? (somaIntensidade / total).toFixed(1) : 0;
-            const emocaoMaisFrequente = total > 0 
+            const emocaoMaisFrequente = total > 0
                 ? Object.keys(contagemEmocoes).reduce((a, b) => contagemEmocoes[a] > contagemEmocoes[b] ? a : b)
                 : 'N/A';
 
@@ -1299,17 +1299,17 @@
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            
+
             let y = 20;
             const margemEsquerda = 15;
             const larguraPagina = 180;
             const alturaPagina = 280;
-            
+
             // Cabeçalho
             doc.setFontSize(18);
             doc.setFont('helvetica', 'bold');
             doc.text('DIÁRIO EMOCIONAL - TCC', margemEsquerda, y);
-            
+
             y += 8;
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
@@ -1319,11 +1319,11 @@
             y += 5;
             doc.text(`Exportado em: ${new Date().toLocaleString('pt-BR')}`, margemEsquerda, y);
             y += 10;
-            
+
             doc.setLineWidth(0.5);
             doc.line(margemEsquerda, y, margemEsquerda + larguraPagina, y);
             y += 10;
-            
+
             // Registros
             registros.forEach((reg, index) => {
                 // Verificar se precisa de nova página
@@ -1331,13 +1331,13 @@
                     doc.addPage();
                     y = 20;
                 }
-                
+
                 // Número do registro
                 doc.setFontSize(14);
                 doc.setFont('helvetica', 'bold');
                 doc.text(`Registro #${index + 1}`, margemEsquerda, y);
                 y += 8;
-                
+
                 // Data/Hora
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'bold');
@@ -1345,7 +1345,7 @@
                 doc.setFont('helvetica', 'normal');
                 doc.text(new Date(reg.dataHora).toLocaleString('pt-BR'), margemEsquerda + 30, y);
                 y += 7;
-                
+
                 // Situação
                 doc.setFont('helvetica', 'bold');
                 doc.text('Situação:', margemEsquerda, y);
@@ -1354,7 +1354,7 @@
                 const linhasSituacao = doc.splitTextToSize(reg.situacao, larguraPagina);
                 doc.text(linhasSituacao, margemEsquerda, y);
                 y += (linhasSituacao.length * 5) + 2;
-                
+
                 // Pensamento
                 if (y > alturaPagina - 30) {
                     doc.addPage();
@@ -1367,7 +1367,7 @@
                 const linhasPensamento = doc.splitTextToSize(reg.pensamento, larguraPagina);
                 doc.text(linhasPensamento, margemEsquerda, y);
                 y += (linhasPensamento.length * 5) + 2;
-                
+
                 // Emoção
                 if (y > alturaPagina - 25) {
                     doc.addPage();
@@ -1381,14 +1381,14 @@
                 const emocaoEsp = reg.emocaoEspecifica || '';
                 doc.text(`${emocaoCentral} > ${emocaoInter} > ${emocaoEsp}`, margemEsquerda + 25, y);
                 y += 7;
-                
+
                 // Intensidade
                 doc.setFont('helvetica', 'bold');
                 doc.text('Intensidade:', margemEsquerda, y);
                 doc.setFont('helvetica', 'normal');
                 doc.text(`${reg.intensidade}/10`, margemEsquerda + 30, y);
                 y += 7;
-                
+
                 // Comportamento
                 if (y > alturaPagina - 25) {
                     doc.addPage();
@@ -1401,7 +1401,7 @@
                 const linhasComportamento = doc.splitTextToSize(reg.comportamento, larguraPagina);
                 doc.text(linhasComportamento, margemEsquerda, y);
                 y += (linhasComportamento.length * 5) + 8;
-                
+
                 // Linha separadora
                 if (index < registros.length - 1) {
                     if (y > alturaPagina - 15) {
@@ -1414,7 +1414,7 @@
                     y += 10;
                 }
             });
-            
+
             // Salvar PDF
             const nomeArquivo = `diario-emocional-${new Date().toISOString().split('T')[0]}.pdf`;
             doc.save(nomeArquivo);
@@ -1431,7 +1431,7 @@
         function exportarCSV() {
             const registros = getRegistros();
             let csv = 'Data,Hora,Situação,Pensamento,Emoção Central,Emoção Intermediária,Emoção Específica,Intensidade,Comportamento\n';
-            
+
             registros.forEach(r => {
                 const data = new Date(r.dataHora);
                 const linha = [
@@ -1447,7 +1447,7 @@
                 ].join(',');
                 csv += linha + '\n';
             });
-            
+
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             baixarArquivo(blob, `diario-emocional-${new Date().toISOString().split('T')[0]}.csv`);
             mostrarToast('📥 CSV baixado!');
@@ -1457,7 +1457,7 @@
             const registros = getRegistros();
             let texto = 'DIÁRIO EMOCIONAL - REGISTRO TCC\n';
             texto += '='.repeat(50) + '\n\n';
-            
+
             registros.forEach((r, i) => {
                 const data = new Date(r.dataHora);
                 texto += `REGISTRO ${i + 1}\n`;
@@ -1474,7 +1474,7 @@
                 texto += `COMPORTAMENTO:\n${r.comportamento}\n\n`;
                 texto += '-'.repeat(50) + '\n\n';
             });
-            
+
             const blob = new Blob([texto], { type: 'text/plain;charset=utf-8;' });
             baixarArquivo(blob, `diario-emocional-${new Date().toISOString().split('T')[0]}.txt`);
             mostrarToast('📥 TXT baixado!');
@@ -1494,7 +1494,7 @@
         function limparTodosDados() {
             if (!confirm('⚠️ ATENÇÃO! Isso vai apagar TODOS os seus registros permanentemente. Tem certeza?')) return;
             if (!confirm('Última confirmação: Todos os dados serão perdidos. Continuar?')) return;
-            
+
             localStorage.removeItem('diarioEmocional');
             carregarHistorico();
             atualizarEstatisticas();
@@ -1507,8 +1507,7 @@
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
-    
-    <script>
+
         // ===== CONFIGURAÇÃO DO FIREBASE =====
         const firebaseConfig = {
             apiKey: "AIzaSyA5g7m_dOZ-ca707_ttxtX_NdQet5pKETg",
@@ -1524,33 +1523,48 @@
         let isLoginMode = true;
         let currentUser = null;
 
-        try {
-            app = firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-            db = firebase.firestore();
-            console.log('✅ Firebase inicializado');
-        } catch (error) {
-            console.error('❌ Erro ao inicializar Firebase:', error);
+        // Mostrar tela de login imediatamente se der erro
+        function showLoginFallback() {
+            console.log('🔓 Mostrando tela de login');
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
         }
 
-        // Verificar estado de autenticação
-        auth.onAuthStateChanged(user => {
-            document.getElementById('loadingScreen').classList.add('hidden');
-            
-            if (user) {
-                currentUser = user;
-                showApp();
-                document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
-                document.getElementById('userEmail').textContent = user.email;
-                carregarDadosFirebase();
-            } else {
-                showLogin();
-            }
-        });
+        // Timeout de segurança - FORÇA mostrar login após 1 segundo
+        setTimeout(showLoginFallback, 1000);
 
-        function showLogin() {
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('appScreen').classList.remove('active');
+        // Tentar inicializar Firebase
+        try {
+            console.log('🔄 Tentando inicializar Firebase...');
+
+            if (typeof firebase === 'undefined') {
+                console.error('❌ Firebase não disponível');
+                showLoginFallback();
+            } else {
+                app = firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                console.log('✅ Firebase inicializado com sucesso');
+
+                // Verificar autenticação
+                auth.onAuthStateChanged(user => {
+                    console.log('👤 Estado de autenticação:', user ? 'Logado' : 'Deslogado');
+                    document.getElementById('loadingScreen').classList.add('hidden');
+
+                    if (user) {
+                        currentUser = user;
+                        showApp();
+                        document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
+                        document.getElementById('userEmail').textContent = user.email;
+                        carregarDadosFirebase();
+                    } else {
+                        showLogin();
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('❌ Erro ao inicializar Firebase:', error);
+            showLoginFallback();
         }
 
         function showApp() {
@@ -1570,7 +1584,7 @@
             const buttonText = document.getElementById('authButtonText');
             const toggleText = document.getElementById('toggleText');
             const toggleLink = document.getElementById('toggleLink');
-            
+
             if (isLoginMode) {
                 buttonText.textContent = 'Entrar';
                 toggleText.textContent = 'Não tem conta?';
@@ -1585,7 +1599,7 @@
         async function handleEmailAuth() {
             const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('passwordInput').value;
-            
+
             if (!email || !password) {
                 showError('Preencha email e senha');
                 return;
@@ -1629,30 +1643,43 @@
         }
 
         async function handleLogout() {
-            if (confirm('Deseja realmente sair?')) {
-                try {
+            if (!confirm('Deseja realmente sair?')) return;
+            
+            try {
+                console.log('🚪 Fazendo logout...');
+                
+                if (auth) {
                     await auth.signOut();
-                    document.getElementById('emailInput').value = '';
-                    document.getElementById('passwordInput').value = '';
-                } catch (error) {
-                    console.error('Erro ao sair:', error);
                 }
+                
+                // Limpar localStorage
+                localStorage.removeItem('registrosEmocionais');
+                
+                console.log('✅ Logout realizado - recarregando página...');
+                
+                // Recarregar página para limpar tudo
+                window.location.reload();
+                
+            } catch (error) {
+                console.error('❌ Erro ao sair:', error);
+                // Mesmo com erro, recarregar
+                window.location.reload();
             }
         }
 
         // ===== INTEGRAÇÃO COM FIRESTORE =====
-        
+
         // Salvar registro no Firestore
         async function salvarRegistroFirebase(registro) {
             if (!currentUser) return;
-            
+
             try {
                 await db.collection('usuarios').doc(currentUser.uid)
                     .collection('registros').add({
                         ...registro,
                         criadoEm: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                
+
                 document.getElementById('syncStatus').textContent = '✓ Sincronizado';
                 document.getElementById('syncStatus').style.color = 'var(--success)';
             } catch (error) {
@@ -1665,21 +1692,21 @@
         // Carregar registros do Firestore
         async function carregarDadosFirebase() {
             if (!currentUser) return;
-            
+
             try {
                 const snapshot = await db.collection('usuarios').doc(currentUser.uid)
                     .collection('registros')
                     .orderBy('criadoEm', 'desc')
                     .get();
-                
+
                 const registros = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
-                
+
                 // Salvar no localStorage também (cache local)
                 localStorage.setItem('registrosEmocionais', JSON.stringify(registros));
-                
+
                 // Atualizar histórico se estiver na aba
                 if (document.getElementById('historico').classList.contains('active')) {
                     carregarHistorico();
@@ -1692,11 +1719,11 @@
         // Excluir registro do Firestore
         async function excluirRegistroFirebase(registroId) {
             if (!currentUser) return;
-            
+
             try {
                 await db.collection('usuarios').doc(currentUser.uid)
                     .collection('registros').doc(registroId).delete();
-                
+
                 document.getElementById('syncStatus').textContent = '✓ Excluído';
             } catch (error) {
                 console.error('Erro ao excluir:', error);
@@ -1708,7 +1735,7 @@
         window.salvarRegistro = async function() {
             // Chamar função original que salva no localStorage
             salvarRegistroOriginal();
-            
+
             // Pegar o último registro salvo
             const registros = JSON.parse(localStorage.getItem('registrosEmocionais') || '[]');
             if (registros.length > 0) {
