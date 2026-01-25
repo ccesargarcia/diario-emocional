@@ -688,9 +688,9 @@
     </div>
 
     <div class="tabs">
-        <button class="tab active" onclick="showTab('novo')">➕ Novo</button>
-        <button class="tab" onclick="showTab('historico')">📖 Histórico</button>
-        <button class="tab" onclick="showTab('exportar')">📤 Exportar</button>
+        <button class="tab active" onclick="showTab('novo', event)">➕ Novo</button>
+        <button class="tab" onclick="showTab('historico', event)">📖 Histórico</button>
+        <button class="tab" onclick="showTab('exportar', event)">📤 Exportar</button>
     </div>
 
     <!-- TAB: NOVO REGISTRO -->
@@ -1111,11 +1111,21 @@
             slider.oninput = () => valor.textContent = slider.value;
         }
 
-        function showTab(tabName) {
+        function showTab(tabName, event) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            } else {
+                // Se não houver event, procurar a tab pelo onclick
+                document.querySelectorAll('.tab').forEach(t => {
+                    if (t.getAttribute('onclick')?.includes(tabName)) {
+                        t.classList.add('active');
+                    }
+                });
+            }
+            
             document.getElementById(tabName).classList.add('active');
 
             if (tabName === 'historico') carregarHistorico();
