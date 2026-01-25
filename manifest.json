@@ -1,0 +1,17 @@
+{
+  "name": "Diário Emocional TCC",
+  "short_name": "Diário TCC",
+  "description": "Aplicativo para registro emocional baseado em Terapia Cognitivo-Comportamental",
+  "start_url": "/app-diario-mobile.html",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='80'>📔</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
