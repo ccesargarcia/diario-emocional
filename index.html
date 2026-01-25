@@ -1809,6 +1809,14 @@
             return registrosEmMemoria.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
         }
 
+        function getRegistrosSelecionados() {
+            const checkboxes = document.querySelectorAll('.registro-checkbox:checked');
+            const idsSelecionados = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
+            return registrosEmMemoria
+                .filter(r => idsSelecionados.includes(r.id))
+                .sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+        }
+
         function carregarHistorico() {
             const registros = getRegistros().sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
             const lista = document.getElementById('entriesList');
@@ -1823,7 +1831,17 @@
                 return;
             }
 
-            lista.innerHTML = registros.map(r => {
+            // Adicionar botões de seleção
+            const headerSelecao = `
+                <div style="margin-bottom: 15px; padding: 10px; background: var(--background-secondary); border-radius: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <span style="font-weight: 600;">📝 Seleção:</span>
+                    <button class="btn btn-secondary" onclick="selecionarTodos()" style="padding: 5px 12px; font-size: 13px;">✅ Todos</button>
+                    <button class="btn btn-secondary" onclick="deselecionarTodos()" style="padding: 5px 12px; font-size: 13px;">❌ Nenhum</button>
+                    <span style="margin-left: auto; color: var(--text-secondary); font-size: 13px;" id="contadorSelecionados"></span>
+                </div>
+            `;
+
+            lista.innerHTML = headerSelecao + registros.map(r => {
                 const data = new Date(r.dataHora);
                 const dataFormatada = data.toLocaleDateString('pt-BR');
                 const horaFormatada = data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
@@ -1833,9 +1851,12 @@
                 const emojiEmocao = emocoesHierarquia[emocao]?.emoji || '❤️';
 
                 return `
-                    <div class="entry-card">
+                    <div class="entry-card" data-id="${r.id}">
                         <div class="entry-header">
-                            <div class="entry-date">📅 ${dataFormatada} às ${horaFormatada}</div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" class="registro-checkbox" data-id="${r.id}" checked style="width: 20px; height: 20px; cursor: pointer;">
+                                <div class="entry-date">📅 ${dataFormatada} às ${horaFormatada}</div>
+                            </div>
                             <div class="entry-actions">
                                 <button class="icon-btn" onclick="deletarRegistro(${r.id})">🗑️</button>
                             </div>
@@ -1873,6 +1894,31 @@
                     </div>
                 `;
             }).join('');
+            
+            // Atualizar contador ao carregar e ao mudar checkboxes
+            atualizarContadorSelecionados();
+            document.querySelectorAll('.registro-checkbox').forEach(cb => {
+                cb.addEventListener('change', atualizarContadorSelecionados);
+            });
+        }
+
+        function selecionarTodos() {
+            document.querySelectorAll('.registro-checkbox').forEach(cb => cb.checked = true);
+            atualizarContadorSelecionados();
+        }
+
+        function deselecionarTodos() {
+            document.querySelectorAll('.registro-checkbox').forEach(cb => cb.checked = false);
+            atualizarContadorSelecionados();
+        }
+
+        function atualizarContadorSelecionados() {
+            const total = document.querySelectorAll('.registro-checkbox').length;
+            const selecionados = document.querySelectorAll('.registro-checkbox:checked').length;
+            const contador = document.getElementById('contadorSelecionados');
+            if (contador) {
+                contador.textContent = `${selecionados} de ${total} selecionados`;
+            }
         }
 
         function deletarRegistro(id) {
@@ -1942,9 +1988,9 @@
         }
 
         function exportarPDF() {
-            const registros = getRegistros();
+            const registros = getRegistrosSelecionados();
             if (registros.length === 0) {
-                mostrarToast('⚠️ Nenhum registro para exportar');
+                mostrarToast('⚠️ Nenhum registro selecionado para exportar');
                 return;
             }
 
@@ -1956,175 +2002,140 @@
             const larguraPagina = 180;
             const alturaPagina = 280;
 
-            // Cabeçalho com fundo colorido
-            doc.setFillColor(102, 126, 234); // Cor primária
-            doc.rect(0, 0, 210, 35, 'F');
-            
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(20);
+            // Cabeçalho simples
+            doc.setFontSize(18);
             doc.setFont('helvetica', 'bold');
-            doc.text('DIÁRIO EMOCIONAL', 105, 15, { align: 'center' });
-            
-            doc.setFontSize(11);
+            doc.text('DIARIO EMOCIONAL - TCC', margemEsquerda, y);
+
+            y += 8;
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.text('KEITE FABIOLA - PSICÓLOGA 04/58498', 105, 22, { align: 'center' });
-            doc.text('@PSIKEITEFABIOLA | (31) 9 8681-4865', 105, 28, { align: 'center' });
-            
-            doc.setTextColor(0, 0, 0);
-            y = 45;
-            
-            // Info de exportação
-            doc.setFontSize(9);
-            doc.setTextColor(100, 100, 100);
-            doc.text(`Exportado em: ${new Date().toLocaleString('pt-BR')}`, margemEsquerda, y);
+            doc.text('KEITE FABIOLA - PSICOLOGA 04/58498', margemEsquerda, y);
+            y += 5;
+            doc.text('@PSIKEITEFABIOLA | (31) 9 8681-4865', margemEsquerda, y);
+            y += 5;
+            doc.text('Exportado em: ' + new Date().toLocaleString('pt-BR'), margemEsquerda, y);
+            y += 10;
+
+            doc.setLineWidth(0.5);
+            doc.line(margemEsquerda, y, margemEsquerda + larguraPagina, y);
             y += 10;
 
             // Registros
             registros.forEach((reg, index) => {
                 // Verificar se precisa de nova página
-                if (y > alturaPagina - 50) {
+                if (y > alturaPagina - 40) {
                     doc.addPage();
                     y = 20;
                 }
 
-                // Box do registro com fundo claro
-                const yInicio = y;
-                doc.setFillColor(248, 249, 250);
-                doc.roundedRect(margemEsquerda - 3, y - 3, larguraPagina + 6, 18, 2, 2, 'F');
-                
                 // Número do registro
                 doc.setFontSize(14);
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(102, 126, 234);
-                doc.text(`📝 Registro #${index + 1}`, margemEsquerda, y + 5);
-                
-                // Data/Hora no lado direito
-                doc.setFontSize(9);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(100, 100, 100);
-                const dataTexto = new Date(reg.dataHora).toLocaleString('pt-BR');
-                doc.text(dataTexto, margemEsquerda + larguraPagina, y + 5, { align: 'right' });
-                
-                y += 18;
-                doc.setTextColor(0, 0, 0);
+                doc.text('Registro #' + (index + 1), margemEsquerda, y);
+                y += 8;
 
-                // Situação com box
-                doc.setFontSize(11);
+                // Data/Hora
+                doc.setFontSize(10);
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(52, 58, 64);
-                doc.text('📍 Situação:', margemEsquerda, y);
-                y += 6;
-                
+                doc.text('Data/Hora:', margemEsquerda, y);
                 doc.setFont('helvetica', 'normal');
-                doc.setTextColor(33, 37, 41);
-                const linhasSituacao = doc.splitTextToSize(reg.situacao, larguraPagina - 6);
-                doc.setFillColor(255, 252, 231);
-                const alturaSituacao = (linhasSituacao.length * 5) + 4;
-                doc.roundedRect(margemEsquerda, y - 2, larguraPagina, alturaSituacao, 1, 1, 'F');
-                doc.text(linhasSituacao, margemEsquerda + 3, y + 2);
-                y += alturaSituacao + 3;
+                doc.text(new Date(reg.dataHora).toLocaleString('pt-BR'), margemEsquerda + 30, y);
+                y += 7;
+
+                // Situação
+                doc.setFont('helvetica', 'bold');
+                doc.text('Situacao:', margemEsquerda, y);
+                y += 5;
+                doc.setFont('helvetica', 'normal');
+                const linhasSituacao = doc.splitTextToSize(reg.situacao, larguraPagina);
+                doc.text(linhasSituacao, margemEsquerda, y);
+                y += (linhasSituacao.length * 5) + 2;
 
                 // Pensamento
                 if (y > alturaPagina - 30) {
                     doc.addPage();
                     y = 20;
                 }
-                doc.setFontSize(11);
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(52, 58, 64);
-                doc.text('💭 Pensamento Automático:', margemEsquerda, y);
-                y += 6;
-                
+                doc.text('Pensamento Automatico:', margemEsquerda, y);
+                y += 5;
                 doc.setFont('helvetica', 'normal');
-                doc.setTextColor(33, 37, 41);
-                const linhasPensamento = doc.splitTextToSize(reg.pensamento, larguraPagina - 6);
-                doc.setFillColor(232, 244, 253);
-                const alturaPensamento = (linhasPensamento.length * 5) + 4;
-                doc.roundedRect(margemEsquerda, y - 2, larguraPagina, alturaPensamento, 1, 1, 'F');
-                doc.text(linhasPensamento, margemEsquerda + 3, y + 2);
-                y += alturaPensamento + 3;
+                const linhasPensamento = doc.splitTextToSize(reg.pensamento, larguraPagina);
+                doc.text(linhasPensamento, margemEsquerda, y);
+                y += (linhasPensamento.length * 5) + 2;
 
-                // Emoção(ões)
+                // Emoção
                 if (y > alturaPagina - 25) {
                     doc.addPage();
                     y = 20;
                 }
-                doc.setFontSize(11);
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(52, 58, 64);
-                doc.text('❤️ Emoção:', margemEsquerda, y);
-                y += 6;
-                
+                doc.text('Emocao:', margemEsquerda, y);
+                y += 5;
                 doc.setFont('helvetica', 'normal');
-                doc.setTextColor(33, 37, 41);
-                let textoEmocao = reg.emocaoCentral || 'Não especificada';
-                if (reg.emocaoIntermediaria) textoEmocao += ' → ' + reg.emocaoIntermediaria;
-                if (reg.emocaoEspecifica) textoEmocao += ' → ' + reg.emocaoEspecifica;
-                const linhasEmocao = doc.splitTextToSize(textoEmocao, larguraPagina - 6);
-                doc.setFillColor(253, 237, 237);
-                const alturaEmocao = (linhasEmocao.length * 5) + 4;
-                doc.roundedRect(margemEsquerda, y - 2, larguraPagina, alturaEmocao, 1, 1, 'F');
-                doc.text(linhasEmocao, margemEsquerda + 3, y + 2);
-                y += alturaEmocao + 5;
+                let textoEmocao = reg.emocaoCentral || 'Nao especificada';
+                if (reg.emocaoIntermediaria) textoEmocao += ' > ' + reg.emocaoIntermediaria;
+                if (reg.emocaoEspecifica) textoEmocao += ' > ' + reg.emocaoEspecifica;
+                doc.text(textoEmocao, margemEsquerda, y);
+                y += 7;
 
                 // Intensidade
-                doc.setFillColor(220, 53, 69);
-                doc.roundedRect(margemEsquerda, y - 2, 35, 8, 2, 2, 'F');
-                doc.setFontSize(10);
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(255, 255, 255);
-                doc.text(`⚡ ${reg.intensidade}/10`, margemEsquerda + 3, y + 3);
-                doc.setTextColor(0, 0, 0);
-                y += 10;
+                doc.text('Intensidade:', margemEsquerda, y);
+                doc.setFont('helvetica', 'normal');
+                doc.text(reg.intensidade + '/10', margemEsquerda + 30, y);
+                y += 7;
 
                 // Comportamento
                 if (y > alturaPagina - 25) {
                     doc.addPage();
                     y = 20;
                 }
-                doc.setFontSize(11);
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(52, 58, 64);
-                doc.text('🎭 Comportamento:', margemEsquerda, y);
-                y += 6;
-                
+                doc.text('Comportamento:', margemEsquerda, y);
+                y += 5;
                 doc.setFont('helvetica', 'normal');
-                doc.setTextColor(33, 37, 41);
-                const linhasComportamento = doc.splitTextToSize(reg.comportamento, larguraPagina - 6);
-                doc.setFillColor(237, 247, 237);
-                const alturaComportamento = (linhasComportamento.length * 5) + 4;
-                doc.roundedRect(margemEsquerda, y - 2, larguraPagina, alturaComportamento, 1, 1, 'F');
-                doc.text(linhasComportamento, margemEsquerda + 3, y + 2);
-                y += alturaComportamento + 10;
+                const linhasComportamento = doc.splitTextToSize(reg.comportamento, larguraPagina);
+                doc.text(linhasComportamento, margemEsquerda, y);
+                y += (linhasComportamento.length * 5) + 8;
 
-                // Linha separadora mais sutil
+                // Linha separadora
                 if (index < registros.length - 1) {
                     if (y > alturaPagina - 15) {
                         doc.addPage();
                         y = 20;
                     }
+                    doc.setLineWidth(0.3);
                     doc.setDrawColor(200, 200, 200);
-                    doc.setLineWidth(0.5);
                     doc.line(margemEsquerda, y, margemEsquerda + larguraPagina, y);
-                    y += 12;
+                    y += 10;
                 }
             });
 
             // Salvar PDF
-            const nomeArquivo = `diario-emocional-${new Date().toISOString().split('T')[0]}.pdf`;
+            const nomeArquivo = 'diario-emocional-' + new Date().toISOString().split('T')[0] + '.pdf';
             doc.save(nomeArquivo);
-            mostrarToast('✅ PDF baixado com sucesso!');
+            mostrarToast('PDF baixado com sucesso!');
         }
 
         function exportarJSON() {
-            const registros = getRegistros();
+            const registros = getRegistrosSelecionados();
+            if (registros.length === 0) {
+                mostrarToast('⚠️ Nenhum registro selecionado');
+                return;
+            }
             const blob = new Blob([JSON.stringify(registros, null, 2)], { type: 'application/json' });
             baixarArquivo(blob, `diario-emocional-${new Date().toISOString().split('T')[0]}.json`);
             mostrarToast('📥 JSON baixado!');
         }
 
         function exportarCSV() {
-            const registros = getRegistros();
+            const registros = getRegistrosSelecionados();
+            if (registros.length === 0) {
+                mostrarToast('⚠️ Nenhum registro selecionado');
+                return;
+            }
             let csv = 'Data,Hora,Situação,Pensamento,Emoção,Intensidade,Comportamento\n';
 
             registros.forEach(r => {
@@ -2151,7 +2162,11 @@
         }
 
         function exportarTexto() {
-            const registros = getRegistros();
+            const registros = getRegistrosSelecionados();
+            if (registros.length === 0) {
+                mostrarToast('⚠️ Nenhum registro selecionado');
+                return;
+            }
             let texto = 'DIÁRIO EMOCIONAL - REGISTRO TCC\n';
             texto += '='.repeat(50) + '\n\n';
 
