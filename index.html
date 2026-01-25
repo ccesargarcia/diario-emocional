@@ -27,23 +27,52 @@
             --shadow: rgba(0, 0, 0, 0.1);
             --success: #48bb78;
             --danger: #f56565;
+            
+            /* Variáveis para tema claro (padrão) */
+            --bg-body: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-card: #ffffff;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --border-color: #e2e8f0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark Mode */
+        body.dark-mode {
+            --primary: #7c3aed;
+            --primary-dark: #6d28d9;
+            --secondary: #8b5cf6;
+            --bg-light: #1e293b;
+            --text-dark: #f1f5f9;
+            --text-light: #cbd5e1;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.3);
+            
+            --bg-body: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border-color: #334155;
+            --shadow-color: rgba(0, 0, 0, 0.3);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            background: var(--bg-body);
             min-height: 100vh;
             padding-bottom: 80px;
-            color: var(--text-dark);
+            color: var(--text-primary);
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .header {
-            background: white;
+            background: var(--bg-card);
             padding: 20px;
-            box-shadow: 0 2px 10px var(--shadow);
+            box-shadow: 0 2px 10px var(--shadow-color);
             position: sticky;
             top: 0;
             z-index: 100;
+            transition: background 0.3s ease;
         }
 
         .header h1 {
@@ -61,17 +90,18 @@
 
         .tabs {
             display: flex;
-            background: white;
-            box-shadow: 0 2px 5px var(--shadow);
+            background: var(--bg-card);
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: background 0.3s ease;
         }
 
         .tab {
             flex: 1;
             padding: 15px;
             text-align: center;
-            background: white;
+            background: var(--bg-card);
             border: none;
-            color: var(--text-light);
+            color: var(--text-secondary);
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -94,17 +124,18 @@
         }
 
         .form-group {
-            background: white;
+            background: var(--bg-card);
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 15px;
-            box-shadow: 0 2px 10px var(--shadow);
+            box-shadow: 0 2px 10px var(--shadow-color);
+            transition: background 0.3s ease;
         }
 
         .form-group label {
             display: block;
             font-weight: 600;
-            color: var(--text-dark);
+            color: var(--text-primary);
             margin-bottom: 10px;
             font-size: 15px;
         }
@@ -119,11 +150,13 @@
         .form-group select {
             width: 100%;
             padding: 15px;
-            border: 2px solid var(--border);
+            border: 2px solid var(--border-color);
             border-radius: 10px;
             font-size: 16px;
             font-family: inherit;
-            transition: border-color 0.3s;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transition: all 0.3s;
         }
 
         .form-group input:focus,
@@ -180,9 +213,10 @@
 
         .emotion-btn {
             padding: 15px 10px;
-            border: 2px solid var(--border);
+            border: 2px solid var(--border-color);
             border-radius: 12px;
-            background: white;
+            background: var(--bg-card);
+            color: var(--text-primary);
             font-size: 12px;
             cursor: pointer;
             transition: all 0.3s;
@@ -260,11 +294,12 @@
         }
 
         .entry-card {
-            background: white;
+            background: var(--bg-card);
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 15px;
-            box-shadow: 0 2px 10px var(--shadow);
+            box-shadow: 0 2px 10px var(--shadow-color);
+            transition: background 0.3s ease;
         }
 
         .entry-header {
@@ -338,17 +373,18 @@
         }
 
         .export-section {
-            background: white;
+            background: var(--bg-card);
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 15px;
-            box-shadow: 0 2px 10px var(--shadow);
+            box-shadow: 0 2px 10px var(--shadow-color);
             text-align: center;
+            transition: background 0.3s ease;
         }
 
         .export-section h3 {
             margin-bottom: 15px;
-            color: var(--text-dark);
+            color: var(--text-primary);
         }
 
         .stats-grid {
@@ -405,6 +441,74 @@
             transform: translateX(-50%) translateY(0);
         }
 
+        /* Cabeçalho de Boas-vindas */
+        .welcome-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 25px 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .greeting h2 {
+            font-size: 28px;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .greeting p {
+            font-size: 14px;
+            margin: 5px 0 0 0;
+            opacity: 0.95;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-theme-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
         @media (max-width: 380px) {
             .emotions-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -429,13 +533,14 @@
         }
 
         .login-box {
-            background: white;
+            background: var(--bg-card);
             border-radius: 20px;
             padding: 40px 30px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             max-width: 400px;
             width: 100%;
             text-align: center;
+            transition: background 0.3s ease;
         }
 
         .login-box h1 {
@@ -454,15 +559,70 @@
             width: 100%;
             padding: 15px;
             margin-bottom: 15px;
-            border: 2px solid var(--border);
+            border: 2px solid var(--border-color);
             border-radius: 10px;
             font-size: 16px;
-            transition: border 0.3s;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transition: all 0.3s;
         }
 
         .login-form input:focus {
             outline: none;
             border-color: var(--primary);
+        }
+
+        .signup-fields {
+            margin-bottom: 20px;
+        }
+
+        .signup-fields input,
+        .signup-fields select {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 16px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+
+        .signup-fields input:focus,
+        .signup-fields select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .terms-checkbox {
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .terms-checkbox label {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-light);
+            cursor: pointer;
+        }
+
+        .terms-checkbox input[type="checkbox"] {
+            margin-top: 2px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .terms-checkbox a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .terms-checkbox a:hover {
+            text-decoration: underline;
         }
 
         .btn-login {
@@ -540,14 +700,10 @@
 
         .user-info {
             background: white;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 12px 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
             box-shadow: 0 2px 10px var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 101;
         }
 
         .user-info .user-details {
@@ -563,17 +719,7 @@
         .user-info .user-email {
             font-size: 11px;
             color: var(--text-light);
-        }
-
-        .btn-logout {
-            padding: 8px 16px;
-            background: var(--danger);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            font-weight: 600;
+            margin-top: 2px;
         }
 
         .hidden {
@@ -643,9 +789,31 @@
 
             <div id="authError" class="error-message hidden"></div>
 
+            <!-- Campos extras para cadastro -->
+            <div id="signupFields" class="signup-fields hidden">
+                <input type="text" id="nomeCompleto" placeholder="Nome completo *" required>
+                <input type="date" id="dataNascimento" placeholder="Data de nascimento">
+                <select id="genero">
+                    <option value="">Gênero (opcional)</option>
+                    <option value="masculino">Masculino</option>
+                    <option value="feminino">Feminino</option>
+                    <option value="outro">Outro</option>
+                    <option value="prefiro-nao-informar">Prefiro não informar</option>
+                </select>
+            </div>
+
             <div class="login-form">
                 <input type="email" id="emailInput" placeholder="Email" autocomplete="email">
-                <input type="password" id="passwordInput" placeholder="Senha" autocomplete="current-password">
+                <input type="password" id="passwordInput" placeholder="Senha (mínimo 6 caracteres)" autocomplete="current-password">
+                
+                <!-- Checkbox de termos (só aparece no cadastro) -->
+                <div id="termsCheckbox" class="terms-checkbox hidden">
+                    <label>
+                        <input type="checkbox" id="acceptTerms">
+                        <span>Aceito os <a href="#" onclick="mostrarTermos(); return false;">termos de uso</a> e <a href="#" onclick="mostrarPrivacidade(); return false;">política de privacidade</a></span>
+                    </label>
+                </div>
+                
                 <button class="btn-login" onclick="handleEmailAuth()">
                     <span id="authButtonText">Entrar</span>
                 </button>
@@ -672,13 +840,26 @@
 
     <!-- App Principal -->
     <div id="appScreen" class="app-wrapper">
+        <!-- Cabeçalho com saudação personalizada -->
+        <div class="welcome-header">
+            <div class="greeting">
+                <h2 id="greetingMessage">Olá!</h2>
+                <p id="currentDateTime"></p>
+            </div>
+            <div class="welcome-actions">
+                <button class="btn-theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+                    <span id="themeIcon">🌙</span>
+                </button>
+                <button class="btn-logout" onclick="handleLogout()">Sair</button>
+            </div>
+        </div>
+
         <div class="user-info">
             <div class="user-details">
                 <div class="user-name" id="userName">Usuário</div>
                 <div class="user-email" id="userEmail">email@exemplo.com</div>
                 <div class="sync-status" id="syncStatus">✓ Sincronizado</div>
             </div>
-            <button class="btn-logout" onclick="handleLogout()">Sair</button>
         </div>
 
 
@@ -1289,12 +1470,12 @@
             // Encontrar o registro para pegar o firebaseId
             const registro = registrosEmMemoria.find(r => r.id === id);
             const firebaseId = registro?.firebaseId;
-            
+
             if (!firebaseId) {
                 mostrarToast('⚠️ Erro: registro sem ID do Firebase');
                 return;
             }
-            
+
             // Deletar APENAS do Firebase
             console.log('☁️ Excluindo registro do Firebase...', firebaseId);
             excluirRegistroFirebase(firebaseId).then(() => {
@@ -1559,14 +1740,14 @@
                 const batch = db.batch();
                 const snapshot = await db.collection('usuarios').doc(currentUser.uid)
                     .collection('registros').get();
-                
+
                 snapshot.docs.forEach(doc => {
                     batch.delete(doc.ref);
                 });
-                
+
                 await batch.commit();
                 registrosEmMemoria = [];
-                
+
                 carregarHistorico();
                 atualizarEstatisticas();
                 mostrarToast('🗑️ Todos os dados foram apagados');
@@ -1631,10 +1812,21 @@
                         console.log('✅ Usuário autenticado:', user.email);
                         currentUser = user;
 
+                        // Carregar perfil do usuário
+                        const perfil = await carregarPerfilUsuario(user.uid);
+                        
                         // Atualizar informações do usuário
                         const userName = document.getElementById('userName');
                         const userEmail = document.getElementById('userEmail');
-                        if (userName) userName.textContent = user.displayName || user.email.split('@')[0];
+                        
+                        if (perfil && perfil.nomeCompleto) {
+                            if (userName) userName.textContent = perfil.nomeCompleto;
+                        } else if (user.displayName) {
+                            if (userName) userName.textContent = user.displayName;
+                        } else {
+                            if (userName) userName.textContent = user.email.split('@')[0];
+                        }
+                        
                         if (userEmail) userEmail.textContent = user.email;
 
                         // Mostrar app imediatamente e carregar dados em background
@@ -1651,6 +1843,101 @@
             showLoginFallback();
         }
 
+        // Carregar perfil do usuário do Firestore
+        async function carregarPerfilUsuario(uid) {
+            try {
+                const doc = await db.collection('usuarios').doc(uid).get();
+                if (doc.exists) {
+                    const perfil = doc.data();
+                    return perfil;
+                }
+                return null;
+            } catch (error) {
+                console.error('❌ Erro ao carregar perfil:', error);
+                return null;
+            }
+        }
+
+        // Atualizar saudação com nome do usuário e período do dia
+        async function atualizarSaudacao() {
+            const hora = new Date().getHours();
+            let saudacao;
+
+            if (hora >= 5 && hora < 12) {
+                saudacao = '🌅 Bom dia';
+            } else if (hora >= 12 && hora < 18) {
+                saudacao = '☀️ Boa tarde';
+            } else {
+                saudacao = '🌙 Boa noite';
+            }
+
+            let nomeUsuario = 'Usuário';
+
+            // Tentar pegar o nome do perfil
+            if (currentUser) {
+                const perfil = await carregarPerfilUsuario(currentUser.uid);
+                if (perfil && perfil.nomeCompleto) {
+                    nomeUsuario = perfil.nomeCompleto.split(' ')[0]; // Primeiro nome
+                } else if (currentUser.displayName) {
+                    nomeUsuario = currentUser.displayName.split(' ')[0];
+                } else if (currentUser.email) {
+                    nomeUsuario = currentUser.email.split('@')[0];
+                }
+            }
+
+            document.getElementById('greetingMessage').textContent = `${saudacao}, ${nomeUsuario}!`;
+        }
+
+        // Atualizar data e hora em tempo real
+        function atualizarDataHora() {
+            const atualizar = () => {
+                const agora = new Date();
+                const opcoes = {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                const dataFormatada = agora.toLocaleDateString('pt-BR', opcoes);
+                document.getElementById('currentDateTime').textContent = dataFormatada;
+            };
+
+            atualizar();
+            // Atualizar a cada minuto
+            setInterval(atualizar, 60000);
+        }
+
+        // Gerenciar tema (Dark Mode)
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeIcon.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Carregar preferência de tema
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                if (themeIcon) themeIcon.textContent = '☀️';
+            } else {
+                if (themeIcon) themeIcon.textContent = '🌙';
+            }
+        }
+
         function showApp() {
             console.log('📱 Mostrando app...');
             document.getElementById('loadingScreen').classList.add('hidden');
@@ -1658,8 +1945,13 @@
             document.getElementById('appScreen').classList.remove('hidden');
             document.getElementById('appScreen').classList.add('active');
 
+            // Carregar tema preferido
+            loadTheme();
+            
             // Inicializar app imediatamente
             inicializarApp();
+            atualizarSaudacao();
+            atualizarDataHora();
             console.log('✅ App inicializado!');
         }
 
@@ -1683,15 +1975,21 @@
             const buttonText = document.getElementById('authButtonText');
             const toggleText = document.getElementById('toggleText');
             const toggleLink = document.getElementById('toggleLink');
+            const signupFields = document.getElementById('signupFields');
+            const termsCheckbox = document.getElementById('termsCheckbox');
 
             if (isLoginMode) {
                 buttonText.textContent = 'Entrar';
                 toggleText.textContent = 'Não tem conta?';
                 toggleLink.textContent = 'Criar conta';
+                signupFields.classList.add('hidden');
+                termsCheckbox.classList.add('hidden');
             } else {
                 buttonText.textContent = 'Criar Conta';
                 toggleText.textContent = 'Já tem conta?';
                 toggleLink.textContent = 'Fazer login';
+                signupFields.classList.remove('hidden');
+                termsCheckbox.classList.remove('hidden');
             }
         }
 
@@ -1711,6 +2009,22 @@
                 return;
             }
 
+            // Se for cadastro, validar campos extras
+            if (!isLoginMode) {
+                const nomeCompleto = document.getElementById('nomeCompleto').value.trim();
+                const acceptTerms = document.getElementById('acceptTerms').checked;
+
+                if (!nomeCompleto) {
+                    showError('Preencha seu nome completo');
+                    return;
+                }
+
+                if (!acceptTerms) {
+                    showError('Você precisa aceitar os termos de uso');
+                    return;
+                }
+            }
+
             try {
                 // Garantir persistência LOCAL antes de fazer login
                 await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
@@ -1724,6 +2038,9 @@
                     console.log('📝 Criando conta...');
                     const result = await auth.createUserWithEmailAndPassword(email, password);
                     console.log('✅ Conta criada:', result.user.email);
+
+                    // Salvar informações adicionais do usuário
+                    await salvarPerfilUsuario(result.user.uid);
                 }
 
                 // onAuthStateChanged vai chamar showApp() automaticamente
@@ -1773,6 +2090,125 @@
             }
         }
 
+        // Salvar perfil do usuário no Firestore
+        async function salvarPerfilUsuario(uid) {
+            try {
+                const nomeCompleto = document.getElementById('nomeCompleto').value.trim();
+                const dataNascimento = document.getElementById('dataNascimento').value;
+                const genero = document.getElementById('genero').value;
+
+                const perfil = {
+                    nomeCompleto,
+                    dataNascimento: dataNascimento || null,
+                    genero: genero || null,
+                    email: currentUser?.email || auth.currentUser?.email,
+                    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('usuarios').doc(uid).set(perfil);
+                
+                // Atualizar displayName no Authentication
+                if (auth.currentUser) {
+                    await auth.currentUser.updateProfile({
+                        displayName: nomeCompleto
+                    });
+                }
+
+                console.log('✅ Perfil do usuário salvo com sucesso');
+            } catch (error) {
+                console.error('❌ Erro ao salvar perfil:', error);
+                // Não bloquear o cadastro por falha ao salvar perfil
+            }
+        }
+
+        // Carregar perfil do usuário do Firestore
+        async function carregarPerfilUsuario(uid) {
+            try {
+                const doc = await db.collection('usuarios').doc(uid).get();
+                if (doc.exists) {
+                    const perfil = doc.data();
+                    return perfil;
+                }
+                return null;
+            } catch (error) {
+                console.error('❌ Erro ao carregar perfil:', error);
+                return null;
+            }
+        }
+
+        // Atualizar saudação com nome do usuário e período do dia
+        async function atualizarSaudacao() {
+            const hora = new Date().getHours();
+            let saudacao;
+
+            if (hora >= 5 && hora < 12) {
+                saudacao = '🌅 Bom dia';
+            } else if (hora >= 12 && hora < 18) {
+                saudacao = '☀️ Boa tarde';
+            } else {
+                saudacao = '🌙 Boa noite';
+            }
+
+            let nomeUsuario = 'Usuário';
+
+            // Tentar pegar o nome do perfil
+            if (currentUser) {
+                const perfil = await carregarPerfilUsuario(currentUser.uid);
+                if (perfil && perfil.nomeCompleto) {
+                    nomeUsuario = perfil.nomeCompleto.split(' ')[0]; // Primeiro nome
+                } else if (currentUser.displayName) {
+                    nomeUsuario = currentUser.displayName.split(' ')[0];
+                } else if (currentUser.email) {
+                    nomeUsuario = currentUser.email.split('@')[0];
+                }
+            }
+
+            document.getElementById('greetingMessage').textContent = `${saudacao}, ${nomeUsuario}!`;
+        }
+
+        // Atualizar data e hora em tempo real
+        function atualizarDataHora() {
+            const atualizar = () => {
+                const agora = new Date();
+                const opcoes = {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                const dataFormatada = agora.toLocaleDateString('pt-BR', opcoes);
+                document.getElementById('currentDateTime').textContent = dataFormatada;
+            };
+
+            atualizar();
+            // Atualizar a cada minuto
+            setInterval(atualizar, 60000);
+        }
+
+        // Mostrar termos de uso
+        function mostrarTermos() {
+            alert('TERMOS DE USO\n\n' +
+                '1. Este aplicativo é um diário pessoal para registros emocionais.\n' +
+                '2. Seus dados são privados e protegidos por criptografia.\n' +
+                '3. Apenas você tem acesso aos seus registros.\n' +
+                '4. Não compartilhamos seus dados com terceiros.\n' +
+                '5. Você pode excluir sua conta e dados a qualquer momento.\n' +
+                '6. Este app não substitui tratamento psicológico profissional.');
+        }
+
+        function mostrarPrivacidade() {
+            alert('POLÍTICA DE PRIVACIDADE\n\n' +
+                '1. Coletamos: email, nome e dados emocionais que você registra.\n' +
+                '2. Uso: Apenas para funcionamento do aplicativo.\n' +
+                '3. Armazenamento: Firebase (Google Cloud) com criptografia.\n' +
+                '4. Compartilhamento: Não compartilhamos com terceiros.\n' +
+                '5. Seus direitos: Acesso, correção e exclusão dos seus dados.\n' +
+                '6. Segurança: Autenticação, regras de segurança e isolamento de dados.\n' +
+                '7. Contato: Para dúvidas sobre privacidade, entre em contato.');
+        }
+
         async function handleLogout() {
             if (!confirm('Deseja realmente sair?')) return;
 
@@ -1784,27 +2220,35 @@
                     console.log('✅ Logout realizado com sucesso');
                 }
 
-                // NÃO limpar localStorage - os dados devem permanecer
-                // Apenas mostrar tela de login
+                // Limpar dados da memória por segurança
+                registrosEmMemoria = [];
                 currentUser = null;
                 showLogin();
 
             } catch (error) {
                 console.error('❌ Erro ao sair:', error);
+                registrosEmMemoria = [];
                 currentUser = null;
                 showLogin();
             }
         }
 
-        // Salvar registro no Firestore
+        // Salvar registro no Firestore (com validação de segurança)
         async function salvarRegistroFirebase(registro) {
-            if (!currentUser) return null;
+            // SEGURANÇA: Verificar se usuário está autenticado
+            if (!currentUser || !currentUser.uid) {
+                console.error('❌ SEGURANÇA: Tentativa de salvar sem autenticação');
+                return null;
+            }
 
             try {
+                // SEGURANÇA: Salvar apenas na coleção do usuário autenticado
                 const docRef = await db.collection('usuarios').doc(currentUser.uid)
                     .collection('registros').add({
                         ...registro,
-                        criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                        criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                        // SEGURANÇA: Adicionar UID do proprietário
+                        proprietario: currentUser.uid
                     });
 
                 console.log('✅ Registro salvo no Firebase com ID:', docRef.id);
@@ -1820,12 +2264,18 @@
             }
         }
 
-        // Carregar registros do Firestore
+        // Carregar registros do Firestore (com validação de segurança)
         async function carregarDadosFirebase() {
-            if (!currentUser) return;
+            // SEGURANÇA: Verificar se usuário está autenticado
+            if (!currentUser || !currentUser.uid) {
+                console.error('❌ SEGURANÇA: Tentativa de carregar dados sem autenticação');
+                registrosEmMemoria = [];
+                return;
+            }
 
             try {
                 console.log('📥 Carregando dados do Firebase...');
+                // SEGURANÇA: Buscar apenas dados do usuário autenticado
                 const snapshot = await db.collection('usuarios').doc(currentUser.uid)
                     .collection('registros')
                     .orderBy('criadoEm', 'desc')
@@ -1833,6 +2283,13 @@
 
                 const registrosFirebase = snapshot.docs.map(doc => {
                     const data = doc.data();
+
+                    // SEGURANÇA: Validar proprietário
+                    if (data.proprietario && data.proprietario !== currentUser.uid) {
+                        console.error('❌ SEGURANÇA: Registro não pertence ao usuário atual');
+                        return null;
+                    }
+
                     return {
                         id: data.id, // ID local original
                         firebaseId: doc.id, // ID do documento do Firebase
@@ -1847,19 +2304,22 @@
                     };
                 });
 
-                console.log(`✅ ${registrosFirebase.length} registros carregados do Firebase`);
+                // SEGURANÇA: Filtrar registros nulos (que não passaram na validação)
+                const registrosValidos = registrosFirebase.filter(r => r !== null);
+
+                console.log(`✅ ${registrosValidos.length} registros carregados do Firebase`);
 
                 // Salvar na memória
-                registrosEmMemoria = registrosFirebase;
+                registrosEmMemoria = registrosValidos;
 
                 // Atualizar histórico se estiver na aba
                 if (document.getElementById('historico').classList.contains('active')) {
                     carregarHistorico();
                 }
-                
+
                 // Atualizar estatísticas
                 atualizarEstatisticas();
-                
+
                 document.getElementById('syncStatus').textContent = '✓ Sincronizado';
             } catch (error) {
                 console.error('❌ Erro ao carregar dados do Firebase:', error);
@@ -1867,17 +2327,29 @@
             }
         }
 
-        // Excluir registro do Firestore
+        // Excluir registro do Firestore (com validação de segurança)
         async function excluirRegistroFirebase(registroId) {
-            if (!currentUser) return;
+            // SEGURANÇA: Verificar se usuário está autenticado
+            if (!currentUser || !currentUser.uid) {
+                console.error('❌ SEGURANÇA: Tentativa de excluir sem autenticação');
+                throw new Error('Não autorizado');
+            }
+
+            // SEGURANÇA: Validar formato do ID
+            if (!registroId || typeof registroId !== 'string') {
+                console.error('❌ SEGURANÇA: ID de registro inválido');
+                throw new Error('ID inválido');
+            }
 
             try {
+                // SEGURANÇA: Excluir apenas da coleção do usuário autenticado
                 await db.collection('usuarios').doc(currentUser.uid)
                     .collection('registros').doc(registroId).delete();
 
                 document.getElementById('syncStatus').textContent = '✓ Excluído';
             } catch (error) {
                 console.error('Erro ao excluir:', error);
+                throw error;
             }
         }
 
