@@ -27,7 +27,7 @@
             --shadow: rgba(0, 0, 0, 0.1);
             --success: #48bb78;
             --danger: #f56565;
-            
+
             /* Variáveis para tema claro (padrão) */
             --bg-body: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --bg-card: #ffffff;
@@ -47,7 +47,7 @@
             --text-light: #cbd5e1;
             --border: #334155;
             --shadow: rgba(0, 0, 0, 0.3);
-            
+
             --bg-body: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
             --bg-card: #1e293b;
             --text-primary: #f1f5f9;
@@ -182,11 +182,36 @@
             background: linear-gradient(to right, #48bb78, #ecc94b, #f56565);
             outline: none;
             -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .intensity-slider::-webkit-slider-track {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #48bb78, #ecc94b, #f56565);
+        }
+
+        .intensity-slider::-moz-range-track {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #48bb78, #ecc94b, #f56565);
         }
 
         .intensity-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow);
+            border: 3px solid var(--primary);
+        }
+
+        .intensity-slider::-moz-range-thumb {
             width: 25px;
             height: 25px;
             border-radius: 50%;
@@ -213,14 +238,21 @@
 
         .emotion-btn {
             padding: 15px 10px;
-            border: 2px solid var(--border-color);
+            border: 3px solid var(--border-color);
             border-radius: 12px;
             background: var(--bg-card);
             color: var(--text-primary);
             font-size: 12px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             text-align: center;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .emotion-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
         .emotion-btn .emoji {
@@ -246,9 +278,34 @@
         }
 
         .emotion-btn.selected {
-            border-color: var(--primary);
-            background: #f0f4ff;
-            transform: scale(1.05);
+            border-color: var(--primary) !important;
+            border-width: 4px !important;
+            background: linear-gradient(135deg, #667eea15, #764ba220) !important;
+            transform: scale(1.08);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3), 0 0 0 3px rgba(102, 126, 234, 0.1);
+            font-weight: 600;
+        }
+
+        .emotion-btn.selected::before {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: var(--primary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .emotion-btn.selected .emoji {
+            transform: scale(1.1);
         }
 
         .btn-group {
@@ -411,6 +468,82 @@
             font-size: 12px;
             color: var(--text-light);
             margin-top: 5px;
+        }
+
+        /* Perfil */
+        .profile-info {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .profile-field {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-field:last-child {
+            border-bottom: none;
+        }
+
+        .profile-field strong {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .profile-field p {
+            color: var(--text-primary);
+            font-size: 16px;
+            margin: 0;
+        }
+
+        /* Lista de Usuários (Admin) */
+        .user-item {
+            background: var(--bg-light);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-item-info {
+            flex: 1;
+        }
+
+        .user-item-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 3px;
+        }
+
+        .user-item-email {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .user-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-delete-user {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-delete-user:hover {
+            opacity: 0.8;
         }
 
         .footer-info {
@@ -805,7 +938,7 @@
             <div class="login-form">
                 <input type="email" id="emailInput" placeholder="Email" autocomplete="email">
                 <input type="password" id="passwordInput" placeholder="Senha (mínimo 6 caracteres)" autocomplete="current-password">
-                
+
                 <!-- Checkbox de termos (só aparece no cadastro) -->
                 <div id="termsCheckbox" class="terms-checkbox hidden">
                     <label>
@@ -813,7 +946,7 @@
                         <span>Aceito os <a href="#" onclick="mostrarTermos(); return false;">termos de uso</a> e <a href="#" onclick="mostrarPrivacidade(); return false;">política de privacidade</a></span>
                     </label>
                 </div>
-                
+
                 <button class="btn-login" onclick="handleEmailAuth()">
                     <span id="authButtonText">Entrar</span>
                 </button>
@@ -872,6 +1005,8 @@
         <button class="tab active" onclick="showTab('novo', event)">➕ Novo</button>
         <button class="tab" onclick="showTab('historico', event)">📖 Histórico</button>
         <button class="tab" onclick="showTab('exportar', event)">📤 Exportar</button>
+        <button class="tab" onclick="showTab('perfil', event)">👤 Perfil</button>
+        <button class="tab" id="adminTab" onclick="showTab('admin', event)" style="display: none;">🔐 Admin</button>
     </div>
 
     <!-- TAB: NOVO REGISTRO -->
@@ -946,6 +1081,241 @@
             <h3>⚙️ Configurações</h3>
             <div class="btn-group">
                 <button class="btn btn-secondary" onclick="limparTodosDados()">🗑️ Limpar Tudo</button>
+            </div>
+        </div>
+
+        <div class="footer-info">
+            <p><strong>KEITE FABIOLA – PSICÓLOGA 04/58498</strong></p>
+            <p>@PSIKEITEFABIOLA | (31) 9 8681-4865</p>
+            <p>keitefabiola@outlook.com</p>
+        </div>
+    </div>
+
+    <!-- TAB: PERFIL -->
+    <div id="perfil" class="tab-content">
+        <div class="export-section">
+            <h3>👤 Meu Perfil</h3>
+
+            <!-- Modo Visualização -->
+            <div class="profile-info" id="profileViewMode">
+                <div class="profile-field">
+                    <strong>Nome Completo:</strong>
+                    <p id="profileName">Carregando...</p>
+                </div>
+                <div class="profile-field">
+                    <strong>Email:</strong>
+                    <p id="profileEmail">Carregando...</p>
+                    <small style="color: var(--text-secondary); font-size: 11px;">O email não pode ser alterado</small>
+                </div>
+                <div class="profile-field">
+                    <strong>Data de Nascimento:</strong>
+                    <p id="profileBirthdate">Não informado</p>
+                </div>
+                <div class="profile-field">
+                    <strong>Gênero:</strong>
+                    <p id="profileGender">Não informado</p>
+                </div>
+                <div class="profile-field">
+                    <strong>Membro desde:</strong>
+                    <p id="profileSince">Carregando...</p>
+                </div>
+            </div>
+
+            <!-- Modo Edição -->
+            <div class="profile-edit" id="profileEditMode" style="display: none;">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label><strong>Nome Completo:</strong></label>
+                    <input type="text" id="editNomeCompleto" placeholder="Seu nome completo">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label><strong>Email:</strong></label>
+                    <input type="email" id="editEmail" disabled style="opacity: 0.6; cursor: not-allowed;">
+                    <small style="color: var(--text-secondary); font-size: 11px; display: block; margin-top: 5px;">O email não pode ser alterado</small>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label><strong>Data de Nascimento:</strong></label>
+                    <input type="date" id="editDataNascimento">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label><strong>Gênero:</strong></label>
+                    <select id="editGenero">
+                        <option value="">Selecione...</option>
+                        <option value="masculino">Masculino</option>
+                        <option value="feminino">Feminino</option>
+                        <option value="outro">Outro</option>
+                        <option value="prefiro-nao-dizer">Prefiro não dizer</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="btn-group" style="margin-top: 20px;">
+                <button class="btn btn-primary" id="btnEditProfile" onclick="habilitarEdicaoPerfil()">✏️ Editar Perfil</button>
+                <button class="btn btn-secondary" id="btnCancelEdit" onclick="cancelarEdicaoPerfil()" style="display: none;">❌ Cancelar</button>
+                <button class="btn btn-primary" id="btnSaveProfile" onclick="salvarEdicaoPerfil()" style="display: none;">💾 Salvar Alterações</button>
+            </div>
+        </div>
+
+        <div class="export-section" style="border: 2px solid var(--danger);">
+            <h3 style="color: var(--danger);">⚠️ Zona de Perigo</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Ao excluir sua conta, todos os seus dados serão permanentemente removidos e não poderão ser recuperados.
+            </p>
+            <button class="btn" style="background: var(--danger); color: white;" onclick="confirmarExclusaoConta()">
+                🗑️ Excluir Minha Conta
+            </button>
+        </div>
+
+        <div class="footer-info">
+            <p><strong>KEITE FABIOLA – PSICÓLOGA 04/58498</strong></p>
+            <p>@PSIKEITEFABIOLA | (31) 9 8681-4865</p>
+            <p>keitefabiola@outlook.com</p>
+        </div>
+    </div>
+
+    <!-- TAB: ADMIN -->
+    <div id="admin" class="tab-content">
+        <!-- Dashboard com Estatísticas -->
+        <div class="export-section" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none;">
+            <h3 style="color: white; margin-bottom: 20px;">📊 Dashboard Administrativo</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 15px; text-align: center; backdrop-filter: blur(10px);">
+                    <div style="font-size: 36px; font-weight: bold; margin-bottom: 5px;" id="totalUsuarios">-</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Total de Usuários</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 15px; text-align: center; backdrop-filter: blur(10px);">
+                    <div style="font-size: 36px; font-weight: bold; margin-bottom: 5px;" id="usuariosAtivos">-</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Ativos (7 dias)</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 15px; text-align: center; backdrop-filter: blur(10px);">
+                    <div style="font-size: 36px; font-weight: bold; margin-bottom: 5px;" id="totalRegistros">-</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Total de Registros</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 15px; text-align: center; backdrop-filter: blur(10px);">
+                    <div style="font-size: 36px; font-weight: bold; margin-bottom: 5px;" id="usuariosInativos">-</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Usuários Inativos</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="export-section">
+            <h3>🔐 Gerenciar Usuários</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Gerencie usuários cadastrados no sistema
+            </p>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="carregarDashboardAdmin()">📊 Atualizar Dashboard</button>
+                <button class="btn btn-primary" onclick="carregarListaUsuarios()">🔄 Atualizar Lista</button>
+                <button class="btn btn-primary" onclick="mostrarFormularioNovoUsuario()">➕ Criar Novo Usuário</button>
+            </div>
+        </div>
+
+        <!-- Formulário para Criar Novo Usuário -->
+        <div class="export-section" id="novoUsuarioForm" style="display: none; border: 2px solid var(--primary);">
+            <h3>➕ Criar Novo Usuário</h3>
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label><strong>Nome Completo: *</strong></label>
+                <input type="text" id="novoNomeCompleto" placeholder="Nome completo do usuário">
+            </div>
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label><strong>Email: *</strong></label>
+                <input type="email" id="novoEmail" placeholder="email@exemplo.com">
+            </div>
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label><strong>Senha Temporária: *</strong></label>
+                <input type="password" id="novoSenha" placeholder="Mínimo 6 caracteres">
+                <small style="color: var(--text-secondary); font-size: 11px; display: block; margin-top: 5px;">
+                    O usuário poderá alterar a senha após o primeiro login
+                </small>
+            </div>
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label><strong>Data de Nascimento:</strong></label>
+                <input type="date" id="novoDataNascimento">
+            </div>
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label><strong>Gênero:</strong></label>
+                <select id="novoGenero">
+                    <option value="">Selecione...</option>
+                    <option value="masculino">Masculino</option>
+                    <option value="feminino">Feminino</option>
+                    <option value="outro">Outro</option>
+                    <option value="prefiro-nao-dizer">Prefiro não dizer</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label><strong>Permissão: *</strong></label>
+                <select id="novoRole">
+                    <option value="user">Usuário</option>
+                    <option value="admin">Administrador</option>
+                </select>
+                <small style="color: var(--text-secondary); font-size: 11px; display: block; margin-top: 5px;">
+                    Administradores podem gerenciar todos os usuários
+                </small>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="ocultarFormularioNovoUsuario()">❌ Cancelar</button>
+                <button class="btn btn-primary" onclick="criarNovoUsuario()">✅ Criar Usuário</button>
+            </div>
+        </div>
+
+        <!-- Formulário para Editar Usuário Existente -->
+        <div class="export-section" id="editarUsuarioForm" style="display: none; border: 2px solid var(--primary);">
+            <h3>✏️ Editar Usuário</h3>
+            <input type="hidden" id="editarUsuarioUid">
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label><strong>Nome Completo: *</strong></label>
+                <input type="text" id="editarNomeCompleto" placeholder="Nome completo do usuário">
+            </div>
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label><strong>Email:</strong></label>
+                <input type="email" id="editarEmail" disabled style="opacity: 0.6; cursor: not-allowed;">
+                <small style="color: var(--text-secondary); font-size: 11px; display: block; margin-top: 5px;">
+                    O email não pode ser alterado
+                </small>
+            </div>
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label><strong>Data de Nascimento:</strong></label>
+                <input type="date" id="editarDataNascimento">
+            </div>
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label><strong>Gênero:</strong></label>
+                <select id="editarGenero">
+                    <option value="">Selecione...</option>
+                    <option value="masculino">Masculino</option>
+                    <option value="feminino">Feminino</option>
+                    <option value="outro">Outro</option>
+                    <option value="prefiro-nao-dizer">Prefiro não dizer</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label><strong>Permissão: *</strong></label>
+                <select id="editarRole">
+                    <option value="user">Usuário</option>
+                    <option value="admin">Administrador</option>
+                </select>
+                <small style="color: var(--text-secondary); font-size: 11px; display: block; margin-top: 5px;">
+                    Administradores podem gerenciar todos os usuários
+                </small>
+            </div>
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label><strong>Status: *</strong></label>
+                <select id="editarStatus">
+                    <option value="ativo">✅ Ativo</option>
+                    <option value="inativo">🚫 Inativo</option>
+                </select>
+                <small style="color: var(--text-secondary); font-size: 11px; display: block; margin-top: 5px;">
+                    Usuários inativos não podem fazer login
+                </small>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="cancelarEdicaoUsuarioAdmin()">❌ Cancelar</button>
+                <button class="btn btn-primary" onclick="salvarEdicaoUsuarioAdmin()">💾 Salvar Alterações</button>
+            </div>
+        </div>
+
+        <div class="export-section">
+            <h3>👥 Usuários Cadastrados</h3>
+            <div id="usersList" style="text-align: left;">
+                <p style="text-align: center; color: var(--text-secondary);">Clique em "Atualizar Lista" para carregar os usuários</p>
             </div>
         </div>
 
@@ -1201,6 +1571,9 @@
             configurarSliderIntensidade();
             carregarHistorico();
             atualizarEstatisticas();
+
+            // Verificar se usuário é admin e mostrar aba
+            verificarAdminSilencioso();
         }
 
         function criarGridEmocoes() {
@@ -1220,12 +1593,12 @@
         }
 
         function selecionarEmocaoCentral(nome, btn) {
-            document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('#emotionsGrid .emotion-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             emocaoSelecionada.central = nome;
             emocaoSelecionada.intermediaria = '';
             emocaoSelecionada.especifica = '';
-
+                
             // Mostrar emoções intermediárias
             const intermediariasDiv = document.getElementById('intermediariasDiv');
             const intermediarias = Object.keys(emocoesHierarquia[nome].intermediarias);
@@ -1233,7 +1606,7 @@
 
             intermediariasDiv.innerHTML = `
                 <div class="form-group">
-                    <label><span class="emoji">🎯</span> Qual tipo de ${nome}?</label>
+                    <label><span class="emoji">🎯</span> Qual tipo de ${nome}? (opcional)</label>
                     <div class="emotions-grid" id="intermediariasGrid">
                         ${intermediarias.map(inter => `
                             <button class="emotion-btn" onclick="selecionarIntermediaria('${inter}', this)"
@@ -1244,7 +1617,7 @@
                     </div>
                 </div>
             `;
-
+            
             // Limpar emoções específicas
             document.getElementById('especificasDiv').innerHTML = '';
         }
@@ -1262,7 +1635,7 @@
 
             especificasDiv.innerHTML = `
                 <div class="form-group">
-                    <label><span class="emoji">🔍</span> Mais especificamente:</label>
+                    <label><span class="emoji">🔍</span> Mais especificamente: (opcional)</label>
                     <div class="emotions-grid" id="especificasGrid">
                         ${especificas.map(esp => {
                             const corEspecifica = emocoesCoresEspecificas[esp] || cor;
@@ -1289,7 +1662,48 @@
         function configurarSliderIntensidade() {
             const slider = document.getElementById('intensidade');
             const valor = document.getElementById('intensidadeValor');
-            slider.oninput = () => valor.textContent = slider.value;
+            if (slider && valor) {
+                slider.oninput = () => valor.textContent = slider.value;
+            }
+        }
+
+        function atualizarSlidersIntensidade() {
+            const intensidadesDiv = document.getElementById('intensidadesDiv');
+            
+            if (emocoesSelecionadas.length === 0) {
+                intensidadesDiv.innerHTML = '';
+                return;
+            }
+            
+            intensidadesDiv.innerHTML = `
+                <label><span class="emoji">🏚️</span> Intensidade de cada emoção (0-10)</label>
+                <small style="color: var(--text-secondary); font-size: 11px; display: block; margin-bottom: 12px;">
+                    💡 Ajuste a intensidade individualmente para cada emoção selecionada
+                </small>
+                ${emocoesSelecionadas.map((emocao, index) => {
+                    const cor = emocoesCores[emocao.central] || '#667eea';
+                    const emoji = emocoesHierarquia[emocao.central]?.emoji || '❤️';
+                    return `
+                        <div style="margin-bottom: 15px; padding: 12px; background: ${cor}10; border-left: 4px solid ${cor}; border-radius: 8px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-weight: 600; color: ${cor};"><span style="font-size: 18px;">${emoji}</span> ${emocao.central}</span>
+                                <span style="font-weight: bold; font-size: 18px; color: ${cor};" id="intensidadeValor${index}">${emocao.intensidade || 5}</span>
+                            </div>
+                            <input type="range" min="0" max="10" value="${emocao.intensidade || 5}" 
+                                   class="intensity-slider" 
+                                   style="width: 100%;" 
+                                   oninput="atualizarIntensidadeEmocao(${index}, this.value)">
+                        </div>
+                    `;
+                }).join('')}
+            `;
+        }
+
+        function atualizarIntensidadeEmocao(index, valor) {
+            if (emocoesSelecionadas[index]) {
+                emocoesSelecionadas[index].intensidade = parseInt(valor);
+                document.getElementById(`intensidadeValor${index}`).textContent = valor;
+            }
         }
 
         function showTab(tabName, event) {
@@ -1311,6 +1725,8 @@
 
             if (tabName === 'historico') carregarHistorico();
             if (tabName === 'exportar') atualizarEstatisticas();
+            if (tabName === 'perfil') carregarPerfilUsuarioNaTela();
+            if (tabName === 'admin') verificarAdmin();
         }
 
         function salvarRegistro() {
@@ -1320,8 +1736,8 @@
             const intensidade = document.getElementById('intensidade').value;
             const comportamento = document.getElementById('comportamento').value.trim();
 
-            if (!dataHora || !situacao || !pensamento || !emocaoSelecionada.central || !emocaoSelecionada.intermediaria || !emocaoSelecionada.especifica || !comportamento) {
-                mostrarToast('⚠️ Preencha todos os campos, incluindo todos os níveis da emoção!');
+            if (!dataHora || !situacao || !pensamento || !emocaoSelecionada.central || !comportamento) {
+                mostrarToast('⚠️ Preencha todos os campos e selecione uma emoção!');
                 return;
             }
 
@@ -1336,8 +1752,8 @@
                 situacao,
                 pensamento,
                 emocaoCentral: emocaoSelecionada.central,
-                emocaoIntermediaria: emocaoSelecionada.intermediaria,
-                emocaoEspecifica: emocaoSelecionada.especifica,
+                emocaoIntermediaria: emocaoSelecionada.intermediaria || '',
+                emocaoEspecifica: emocaoSelecionada.especifica || '',
                 intensidade,
                 comportamento
             };
@@ -1377,6 +1793,7 @@
                 intermediaria: '',
                 especifica: ''
             };
+            emocoesSelecionadas = [];
             document.getElementById('intermediariasDiv').innerHTML = '';
             document.getElementById('especificasDiv').innerHTML = '';
 
@@ -1411,12 +1828,9 @@
                 const dataFormatada = data.toLocaleDateString('pt-BR');
                 const horaFormatada = data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
 
-                // Suporte para registros antigos e novos
-                const emocaoCentral = r.emocaoCentral || r.emocao || 'Não especificada';
-                const emocaoIntermediaria = r.emocaoIntermediaria || '';
-                const emocaoEspecifica = r.emocaoEspecifica || '';
-                const cor = emocoesCores[emocaoCentral] || '#667eea';
-                const emojiEmocao = emocoesHierarquia[emocaoCentral]?.emoji || '❤️';
+                const emocao = r.emocaoCentral || r.emocao || 'Não especificada';
+                const cor = emocoesCores[emocao] || '#667eea';
+                const emojiEmocao = emocoesHierarquia[emocao]?.emoji || '❤️';
 
                 return `
                     <div class="entry-card">
@@ -1438,14 +1852,16 @@
                         </div>
 
                         <div class="entry-field">
-                            <strong>Emoção e Intensidade</strong>
-                            <div class="emotion-badge" style="background: ${cor}15; border: 2px solid ${cor}40; flex-wrap: wrap;">
-                                <span style="font-size: 20px;">${emojiEmocao}</span>
-                                <span style="font-weight: bold; color: ${cor};">${emocaoCentral}</span>
-                                ${emocaoIntermediaria ? `<span>→ ${emocaoIntermediaria}</span>` : ''}
-                                ${emocaoEspecifica ? `<span>→ ${emocaoEspecifica}</span>` : ''}
+                            <strong>Emoção</strong>
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <div style="background: ${cor}15; border: 2px solid ${cor}40; display: inline-flex; padding: 8px 12px; border-radius: 20px; align-items: center; gap: 8px;">
+                                    <span style="font-size: 20px;">${emojiEmocao}</span>
+                                    <span style="font-weight: bold; color: ${cor};">${emocao}</span>
+                                    ${r.emocaoIntermediaria ? `<span>→ ${r.emocaoIntermediaria}</span>` : ''}
+                                    ${r.emocaoEspecifica ? `<span>→ ${r.emocaoEspecifica}</span>` : ''}
+                                </div>
                             </div>
-                            <div style="margin-top: 8px; font-weight: bold; color: ${cor}; font-size: 18px;">
+                            <div style="margin-top: 8px; font-weight: bold; color: var(--primary); font-size: 18px;">
                                 Intensidade: ${r.intensidade}/10
                             </div>
                         </div>
@@ -1540,113 +1956,157 @@
             const larguraPagina = 180;
             const alturaPagina = 280;
 
-            // Cabeçalho
-            doc.setFontSize(18);
+            // Cabeçalho com fundo colorido
+            doc.setFillColor(102, 126, 234); // Cor primária
+            doc.rect(0, 0, 210, 35, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(20);
             doc.setFont('helvetica', 'bold');
-            doc.text('DIÁRIO EMOCIONAL - TCC', margemEsquerda, y);
-
-            y += 8;
-            doc.setFontSize(10);
+            doc.text('DIÁRIO EMOCIONAL', 105, 15, { align: 'center' });
+            
+            doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
-            doc.text('KEITE FABIOLA - PSICÓLOGA 04/58498', margemEsquerda, y);
-            y += 5;
-            doc.text('@PSIKEITEFABIOLA | (31) 9 8681-4865', margemEsquerda, y);
-            y += 5;
+            doc.text('KEITE FABIOLA - PSICÓLOGA 04/58498', 105, 22, { align: 'center' });
+            doc.text('@PSIKEITEFABIOLA | (31) 9 8681-4865', 105, 28, { align: 'center' });
+            
+            doc.setTextColor(0, 0, 0);
+            y = 45;
+            
+            // Info de exportação
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
             doc.text(`Exportado em: ${new Date().toLocaleString('pt-BR')}`, margemEsquerda, y);
-            y += 10;
-
-            doc.setLineWidth(0.5);
-            doc.line(margemEsquerda, y, margemEsquerda + larguraPagina, y);
             y += 10;
 
             // Registros
             registros.forEach((reg, index) => {
                 // Verificar se precisa de nova página
-                if (y > alturaPagina - 40) {
+                if (y > alturaPagina - 50) {
                     doc.addPage();
                     y = 20;
                 }
 
+                // Box do registro com fundo claro
+                const yInicio = y;
+                doc.setFillColor(248, 249, 250);
+                doc.roundedRect(margemEsquerda - 3, y - 3, larguraPagina + 6, 18, 2, 2, 'F');
+                
                 // Número do registro
                 doc.setFontSize(14);
                 doc.setFont('helvetica', 'bold');
-                doc.text(`Registro #${index + 1}`, margemEsquerda, y);
-                y += 8;
-
-                // Data/Hora
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Data/Hora:', margemEsquerda, y);
+                doc.setTextColor(102, 126, 234);
+                doc.text(`📝 Registro #${index + 1}`, margemEsquerda, y + 5);
+                
+                // Data/Hora no lado direito
+                doc.setFontSize(9);
                 doc.setFont('helvetica', 'normal');
-                doc.text(new Date(reg.dataHora).toLocaleString('pt-BR'), margemEsquerda + 30, y);
-                y += 7;
+                doc.setTextColor(100, 100, 100);
+                const dataTexto = new Date(reg.dataHora).toLocaleString('pt-BR');
+                doc.text(dataTexto, margemEsquerda + larguraPagina, y + 5, { align: 'right' });
+                
+                y += 18;
+                doc.setTextColor(0, 0, 0);
 
-                // Situação
+                // Situação com box
+                doc.setFontSize(11);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Situação:', margemEsquerda, y);
-                y += 5;
+                doc.setTextColor(52, 58, 64);
+                doc.text('📍 Situação:', margemEsquerda, y);
+                y += 6;
+                
                 doc.setFont('helvetica', 'normal');
-                const linhasSituacao = doc.splitTextToSize(reg.situacao, larguraPagina);
-                doc.text(linhasSituacao, margemEsquerda, y);
-                y += (linhasSituacao.length * 5) + 2;
+                doc.setTextColor(33, 37, 41);
+                const linhasSituacao = doc.splitTextToSize(reg.situacao, larguraPagina - 6);
+                doc.setFillColor(255, 252, 231);
+                const alturaSituacao = (linhasSituacao.length * 5) + 4;
+                doc.roundedRect(margemEsquerda, y - 2, larguraPagina, alturaSituacao, 1, 1, 'F');
+                doc.text(linhasSituacao, margemEsquerda + 3, y + 2);
+                y += alturaSituacao + 3;
 
                 // Pensamento
                 if (y > alturaPagina - 30) {
                     doc.addPage();
                     y = 20;
                 }
+                doc.setFontSize(11);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Pensamento Automático:', margemEsquerda, y);
-                y += 5;
+                doc.setTextColor(52, 58, 64);
+                doc.text('💭 Pensamento Automático:', margemEsquerda, y);
+                y += 6;
+                
                 doc.setFont('helvetica', 'normal');
-                const linhasPensamento = doc.splitTextToSize(reg.pensamento, larguraPagina);
-                doc.text(linhasPensamento, margemEsquerda, y);
-                y += (linhasPensamento.length * 5) + 2;
+                doc.setTextColor(33, 37, 41);
+                const linhasPensamento = doc.splitTextToSize(reg.pensamento, larguraPagina - 6);
+                doc.setFillColor(232, 244, 253);
+                const alturaPensamento = (linhasPensamento.length * 5) + 4;
+                doc.roundedRect(margemEsquerda, y - 2, larguraPagina, alturaPensamento, 1, 1, 'F');
+                doc.text(linhasPensamento, margemEsquerda + 3, y + 2);
+                y += alturaPensamento + 3;
 
-                // Emoção
+                // Emoção(ões)
                 if (y > alturaPagina - 25) {
                     doc.addPage();
                     y = 20;
                 }
+                doc.setFontSize(11);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Emoção:', margemEsquerda, y);
+                doc.setTextColor(52, 58, 64);
+                doc.text('❤️ Emoção:', margemEsquerda, y);
+                y += 6;
+                
                 doc.setFont('helvetica', 'normal');
-                const emocaoCentral = reg.emocaoCentral || reg.emocao || '';
-                const emocaoInter = reg.emocaoIntermediaria || '';
-                const emocaoEsp = reg.emocaoEspecifica || '';
-                doc.text(`${emocaoCentral} > ${emocaoInter} > ${emocaoEsp}`, margemEsquerda + 25, y);
-                y += 7;
+                doc.setTextColor(33, 37, 41);
+                let textoEmocao = reg.emocaoCentral || 'Não especificada';
+                if (reg.emocaoIntermediaria) textoEmocao += ' → ' + reg.emocaoIntermediaria;
+                if (reg.emocaoEspecifica) textoEmocao += ' → ' + reg.emocaoEspecifica;
+                const linhasEmocao = doc.splitTextToSize(textoEmocao, larguraPagina - 6);
+                doc.setFillColor(253, 237, 237);
+                const alturaEmocao = (linhasEmocao.length * 5) + 4;
+                doc.roundedRect(margemEsquerda, y - 2, larguraPagina, alturaEmocao, 1, 1, 'F');
+                doc.text(linhasEmocao, margemEsquerda + 3, y + 2);
+                y += alturaEmocao + 5;
 
                 // Intensidade
+                doc.setFillColor(220, 53, 69);
+                doc.roundedRect(margemEsquerda, y - 2, 35, 8, 2, 2, 'F');
+                doc.setFontSize(10);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Intensidade:', margemEsquerda, y);
-                doc.setFont('helvetica', 'normal');
-                doc.text(`${reg.intensidade}/10`, margemEsquerda + 30, y);
-                y += 7;
+                doc.setTextColor(255, 255, 255);
+                doc.text(`⚡ ${reg.intensidade}/10`, margemEsquerda + 3, y + 3);
+                doc.setTextColor(0, 0, 0);
+                y += 10;
 
                 // Comportamento
                 if (y > alturaPagina - 25) {
                     doc.addPage();
                     y = 20;
                 }
+                doc.setFontSize(11);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Comportamento:', margemEsquerda, y);
-                y += 5;
+                doc.setTextColor(52, 58, 64);
+                doc.text('🎭 Comportamento:', margemEsquerda, y);
+                y += 6;
+                
                 doc.setFont('helvetica', 'normal');
-                const linhasComportamento = doc.splitTextToSize(reg.comportamento, larguraPagina);
-                doc.text(linhasComportamento, margemEsquerda, y);
-                y += (linhasComportamento.length * 5) + 8;
+                doc.setTextColor(33, 37, 41);
+                const linhasComportamento = doc.splitTextToSize(reg.comportamento, larguraPagina - 6);
+                doc.setFillColor(237, 247, 237);
+                const alturaComportamento = (linhasComportamento.length * 5) + 4;
+                doc.roundedRect(margemEsquerda, y - 2, larguraPagina, alturaComportamento, 1, 1, 'F');
+                doc.text(linhasComportamento, margemEsquerda + 3, y + 2);
+                y += alturaComportamento + 10;
 
-                // Linha separadora
+                // Linha separadora mais sutil
                 if (index < registros.length - 1) {
                     if (y > alturaPagina - 15) {
                         doc.addPage();
                         y = 20;
                     }
-                    doc.setLineWidth(0.3);
                     doc.setDrawColor(200, 200, 200);
+                    doc.setLineWidth(0.5);
                     doc.line(margemEsquerda, y, margemEsquerda + larguraPagina, y);
-                    y += 10;
+                    y += 12;
                 }
             });
 
@@ -1665,18 +2125,20 @@
 
         function exportarCSV() {
             const registros = getRegistros();
-            let csv = 'Data,Hora,Situação,Pensamento,Emoção Central,Emoção Intermediária,Emoção Específica,Intensidade,Comportamento\n';
+            let csv = 'Data,Hora,Situação,Pensamento,Emoção,Intensidade,Comportamento\n';
 
             registros.forEach(r => {
                 const data = new Date(r.dataHora);
+                let emocaoTexto = r.emocaoCentral || '';
+                if (r.emocaoIntermediaria) emocaoTexto += ' > ' + r.emocaoIntermediaria;
+                if (r.emocaoEspecifica) emocaoTexto += ' > ' + r.emocaoEspecifica;
+                
                 const linha = [
                     data.toLocaleDateString('pt-BR'),
                     data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
                     `"${r.situacao.replace(/"/g, '""')}"`,
                     `"${r.pensamento.replace(/"/g, '""')}"`,
-                    r.emocaoCentral || r.emocao || '',
-                    r.emocaoIntermediaria || '',
-                    r.emocaoEspecifica || '',
+                    `"${emocaoTexto}"`,
                     r.intensidade,
                     `"${r.comportamento.replace(/"/g, '""')}"`
                 ].join(',');
@@ -1699,13 +2161,10 @@
                 texto += `Data: ${data.toLocaleDateString('pt-BR')} às ${data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}\n\n`;
                 texto += `SITUAÇÃO:\n${r.situacao}\n\n`;
                 texto += `PENSAMENTO AUTOMÁTICO:\n${r.pensamento}\n\n`;
-                const emocaoCentral = r.emocaoCentral || r.emocao || 'Não especificada';
-                const emocaoIntermediaria = r.emocaoIntermediaria || '';
-                const emocaoEspecifica = r.emocaoEspecifica || '';
-                texto += `EMOÇÃO: ${emocaoCentral}`;
-                if (emocaoIntermediaria) texto += ` → ${emocaoIntermediaria}`;
-                if (emocaoEspecifica) texto += ` → ${emocaoEspecifica}`;
-                texto += ` (Intensidade: ${r.intensidade}/10)\n\n`;
+                texto += `EMOÇÃO:\n${r.emocaoCentral || 'Não especificada'}`;
+                if (r.emocaoIntermediaria) texto += ` → ${r.emocaoIntermediaria}`;
+                if (r.emocaoEspecifica) texto += ` → ${r.emocaoEspecifica}`;
+                texto += `\n\nINTENSIDADE: ${r.intensidade}/10\n\n`;
                 texto += `COMPORTAMENTO:\n${r.comportamento}\n\n`;
                 texto += '-'.repeat(50) + '\n\n';
             });
@@ -1813,12 +2272,43 @@
                         currentUser = user;
 
                         // Carregar perfil do usuário
-                        const perfil = await carregarPerfilUsuario(user.uid);
-                        
+                        let perfil = await carregarPerfilUsuario(user.uid);
+
+                        // Se o perfil não existir, criar um perfil básico
+                        if (!perfil) {
+                            console.log('⚠️ Perfil não encontrado, criando perfil básico...');
+                            const perfilBasico = {
+                                email: user.email,
+                                nomeCompleto: user.displayName || user.email.split('@')[0],
+                                role: 'user',
+                                status: 'ativo',
+                                criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                                ultimaAtividade: firebase.firestore.FieldValue.serverTimestamp()
+                            };
+
+                            try {
+                                await db.collection('usuarios').doc(user.uid).set(perfilBasico);
+                                perfil = perfilBasico;
+                                console.log('✅ Perfil básico criado');
+                            } catch (error) {
+                                console.error('❌ Erro ao criar perfil básico:', error);
+                            }
+                        } else {
+                            // Atualizar última atividade
+                            try {
+                                await db.collection('usuarios').doc(user.uid).update({
+                                    ultimaAtividade: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                                console.log('✅ Última atividade atualizada');
+                            } catch (error) {
+                                console.error('⚠️ Erro ao atualizar última atividade:', error);
+                            }
+                        }
+
                         // Atualizar informações do usuário
                         const userName = document.getElementById('userName');
                         const userEmail = document.getElementById('userEmail');
-                        
+
                         if (perfil && perfil.nomeCompleto) {
                             if (userName) userName.textContent = perfil.nomeCompleto;
                         } else if (user.displayName) {
@@ -1826,7 +2316,7 @@
                         } else {
                             if (userName) userName.textContent = user.email.split('@')[0];
                         }
-                        
+
                         if (userEmail) userEmail.textContent = user.email;
 
                         // Mostrar app imediatamente e carregar dados em background
@@ -1913,9 +2403,9 @@
         function toggleTheme() {
             const body = document.body;
             const themeIcon = document.getElementById('themeIcon');
-            
+
             body.classList.toggle('dark-mode');
-            
+
             if (body.classList.contains('dark-mode')) {
                 themeIcon.textContent = '☀️';
                 localStorage.setItem('theme', 'dark');
@@ -1929,7 +2419,7 @@
         function loadTheme() {
             const savedTheme = localStorage.getItem('theme');
             const themeIcon = document.getElementById('themeIcon');
-            
+
             if (savedTheme === 'dark') {
                 document.body.classList.add('dark-mode');
                 if (themeIcon) themeIcon.textContent = '☀️';
@@ -1945,9 +2435,15 @@
             document.getElementById('appScreen').classList.remove('hidden');
             document.getElementById('appScreen').classList.add('active');
 
+            // IMPORTANTE: Esconder aba admin por padrão (só mostra se for admin)
+            document.getElementById('adminTab').style.display = 'none';
+
+            // Limpar dados de sessão anterior
+            window.perfilAtual = null;
+
             // Carregar tema preferido
             loadTheme();
-            
+
             // Inicializar app imediatamente
             inicializarApp();
             atualizarSaudacao();
@@ -2034,6 +2530,18 @@
                     console.log('📧 Fazendo login...');
                     const result = await auth.signInWithEmailAndPassword(email, password);
                     console.log('✅ Login realizado:', result.user.email);
+
+                    // Verificar se usuário está ativo
+                    const perfilDoc = await db.collection('usuarios').doc(result.user.uid).get();
+                    if (perfilDoc.exists) {
+                        const perfil = perfilDoc.data();
+                        if (perfil.status === 'inativo') {
+                            // Fazer logout imediatamente
+                            await auth.signOut();
+                            showError('❌ Sua conta está inativa. Entre em contato com o administrador.');
+                            return;
+                        }
+                    }
                 } else {
                     console.log('📝 Criando conta...');
                     const result = await auth.createUserWithEmailAndPassword(email, password);
@@ -2102,11 +2610,14 @@
                     dataNascimento: dataNascimento || null,
                     genero: genero || null,
                     email: currentUser?.email || auth.currentUser?.email,
-                    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                    role: 'user', // Novo usuário sempre começa como 'user'
+                    status: 'ativo',
+                    criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                    ultimaAtividade: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
                 await db.collection('usuarios').doc(uid).set(perfil);
-                
+
                 // Atualizar displayName no Authentication
                 if (auth.currentUser) {
                     await auth.currentUser.updateProfile({
@@ -2223,13 +2734,724 @@
                 // Limpar dados da memória por segurança
                 registrosEmMemoria = [];
                 currentUser = null;
+                window.perfilAtual = null;
+
+                // Esconder aba admin
+                document.getElementById('adminTab').style.display = 'none';
+
                 showLogin();
 
             } catch (error) {
                 console.error('❌ Erro ao sair:', error);
                 registrosEmMemoria = [];
                 currentUser = null;
+                window.perfilAtual = null;
+                document.getElementById('adminTab').style.display = 'none';
                 showLogin();
+            }
+        }
+
+        // ===== FUNÇÕES DE PERFIL =====
+
+        // Carregar perfil do usuário na tela
+        async function carregarPerfilUsuarioNaTela() {
+            if (!currentUser) {
+                mostrarToast('⚠️ Você precisa estar logado!');
+                return;
+            }
+
+            try {
+                const perfil = await carregarPerfilUsuario(currentUser.uid);
+
+                document.getElementById('profileName').textContent = perfil?.nomeCompleto || currentUser.displayName || 'Não informado';
+                document.getElementById('profileEmail').textContent = currentUser.email || 'Não informado';
+
+                if (perfil?.dataNascimento) {
+                    // Converter data sem problemas de timezone
+                    const [ano, mes, dia] = perfil.dataNascimento.split('-');
+                    const data = new Date(ano, mes - 1, dia);
+                    document.getElementById('profileBirthdate').textContent = data.toLocaleDateString('pt-BR');
+                } else {
+                    document.getElementById('profileBirthdate').textContent = 'Não informado';
+                }
+
+                const generos = {
+                    'masculino': 'Masculino',
+                    'feminino': 'Feminino',
+                    'outro': 'Outro',
+                    'prefiro-nao-dizer': 'Prefiro não dizer'
+                };
+                document.getElementById('profileGender').textContent = generos[perfil?.genero] || 'Não informado';
+
+                if (currentUser.metadata?.creationTime) {
+                    const dataCriacao = new Date(currentUser.metadata.creationTime);
+                    document.getElementById('profileSince').textContent = dataCriacao.toLocaleDateString('pt-BR');
+                } else {
+                    document.getElementById('profileSince').textContent = 'Não disponível';
+                }
+
+                // Armazenar dados do perfil para edição COM O UID DO USUÁRIO
+                window.perfilAtual = {
+                    ...perfil,
+                    uid: currentUser.uid,
+                    email: currentUser.email
+                };
+
+                console.log('✅ Perfil carregado para usuário:', currentUser.email, 'UID:', currentUser.uid);
+            } catch (error) {
+                console.error('❌ Erro ao carregar perfil:', error);
+                mostrarToast('❌ Erro ao carregar perfil');
+            }
+        }
+
+        // Habilitar modo de edição do perfil
+        function habilitarEdicaoPerfil() {
+            if (!currentUser) {
+                mostrarToast('⚠️ Você precisa estar logado!');
+                return;
+            }
+
+            console.log('🔍 Tentando editar perfil. CurrentUser:', currentUser.email, currentUser.uid);
+            console.log('🔍 PerfilAtual:', window.perfilAtual);
+
+            // Validar que o perfilAtual pertence ao usuário logado
+            if (window.perfilAtual && window.perfilAtual.uid && window.perfilAtual.uid !== currentUser.uid) {
+                console.error('⚠️ SEGURANÇA: Tentativa de editar perfil de outro usuário!');
+                console.error('   CurrentUser UID:', currentUser.uid);
+                console.error('   PerfilAtual UID:', window.perfilAtual.uid);
+                mostrarToast('❌ Erro de segurança detectado. Recarregando perfil...');
+                window.perfilAtual = null; // Limpar dados incorretos
+                carregarPerfilUsuarioNaTela(); // Recarregar perfil correto
+                return;
+            }
+
+            // Se não tem perfilAtual ou não tem UID, recarregar
+            if (!window.perfilAtual || !window.perfilAtual.uid) {
+                console.warn('⚠️ PerfilAtual inválido ou sem UID. Recarregando...');
+                carregarPerfilUsuarioNaTela();
+                return;
+            }
+
+            // Preencher campos de edição com dados atuais DO USUÁRIO LOGADO
+            const perfil = window.perfilAtual || {};
+
+            document.getElementById('editNomeCompleto').value = perfil.nomeCompleto || currentUser?.displayName || '';
+            document.getElementById('editEmail').value = currentUser?.email || '';
+            document.getElementById('editDataNascimento').value = perfil.dataNascimento || '';
+            document.getElementById('editGenero').value = perfil.genero || '';
+
+            console.log('✅ Modo de edição habilitado para:', currentUser.email);
+
+            // Alternar visualização
+            document.getElementById('profileViewMode').style.display = 'none';
+            document.getElementById('profileEditMode').style.display = 'block';
+
+            // Alternar botões
+            document.getElementById('btnEditProfile').style.display = 'none';
+            document.getElementById('btnCancelEdit').style.display = 'inline-block';
+            document.getElementById('btnSaveProfile').style.display = 'inline-block';
+        }
+
+        // Cancelar edição do perfil
+        function cancelarEdicaoPerfil() {
+            // Voltar para modo visualização
+            document.getElementById('profileViewMode').style.display = 'block';
+            document.getElementById('profileEditMode').style.display = 'none';
+
+            // Alternar botões
+            document.getElementById('btnEditProfile').style.display = 'inline-block';
+            document.getElementById('btnCancelEdit').style.display = 'none';
+            document.getElementById('btnSaveProfile').style.display = 'none';
+        }
+
+        // Salvar edições do perfil
+        async function salvarEdicaoPerfil() {
+            if (!currentUser) {
+                mostrarToast('⚠️ Você precisa estar logado!');
+                return;
+            }
+
+            try {
+                const nomeCompleto = document.getElementById('editNomeCompleto').value.trim();
+                const dataNascimento = document.getElementById('editDataNascimento').value;
+                const genero = document.getElementById('editGenero').value;
+
+                // Validação
+                if (!nomeCompleto) {
+                    mostrarToast('⚠️ O nome completo é obrigatório');
+                    return;
+                }
+
+                console.log('📝 Atualizando perfil...');
+
+                // Carregar perfil atual para preservar o role
+                const perfilAtual = await carregarPerfilUsuario(currentUser.uid);
+
+                // Atualizar no Firestore (usando set com merge para criar se não existir)
+                const perfilAtualizado = {
+                    nomeCompleto,
+                    dataNascimento: dataNascimento || null,
+                    genero: genero || null,
+                    email: currentUser.email,
+                    role: perfilAtual?.role || 'user', // Preservar role existente ou usar 'user' como padrão
+                    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                // Usar set com merge para criar o documento se não existir
+                await db.collection('usuarios').doc(currentUser.uid).set(perfilAtualizado, { merge: true });
+
+                // Atualizar displayName no Authentication
+                if (currentUser) {
+                    await currentUser.updateProfile({
+                        displayName: nomeCompleto
+                    });
+                }
+
+                console.log('✅ Perfil atualizado com sucesso');
+                mostrarToast('✅ Perfil atualizado com sucesso!');
+
+                // Recarregar perfil na tela
+                await carregarPerfilUsuarioNaTela();
+
+                // Voltar para modo visualização
+                cancelarEdicaoPerfil();
+
+                // Atualizar saudação se o nome mudou
+                atualizarSaudacao();
+
+            } catch (error) {
+                console.error('❌ Erro ao atualizar perfil:', error);
+                mostrarToast('❌ Erro ao atualizar perfil: ' + error.message);
+            }
+        }
+
+        // Confirmar exclusão da conta
+        function confirmarExclusaoConta() {
+            if (confirm('⚠️ ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\nTodos os seus dados (perfil e registros emocionais) serão permanentemente excluídos.\n\nDeseja realmente excluir sua conta?')) {
+                if (confirm('Última confirmação: Tem certeza absoluta?')) {
+                    excluirMinhaConta();
+                }
+            }
+        }
+
+        // Excluir conta do usuário
+        async function excluirMinhaConta() {
+            if (!currentUser) {
+                mostrarToast('⚠️ Você precisa estar logado!');
+                return;
+            }
+
+            try {
+                console.log('🗑️ Excluindo conta...');
+                const uid = currentUser.uid;
+
+                // 1. Deletar todos os registros do usuário
+                const registrosRef = db.collection('usuarios').doc(uid).collection('registros');
+                const snapshot = await registrosRef.get();
+
+                const batch = db.batch();
+                snapshot.docs.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                console.log('✅ Registros excluídos');
+
+                // 2. Deletar perfil do usuário
+                await db.collection('usuarios').doc(uid).delete();
+                console.log('✅ Perfil excluído');
+
+                // 3. Deletar conta do Firebase Auth
+                await currentUser.delete();
+                console.log('✅ Conta excluída do Firebase Auth');
+
+                // Limpar dados locais
+                registrosEmMemoria = [];
+                currentUser = null;
+
+                alert('✅ Sua conta foi excluída com sucesso. Sentiremos sua falta!');
+                showLogin();
+
+            } catch (error) {
+                console.error('❌ Erro ao excluir conta:', error);
+
+                if (error.code === 'auth/requires-recent-login') {
+                    alert('⚠️ Por segurança, você precisa fazer login novamente antes de excluir sua conta.\n\nFaça logout e login novamente, depois tente excluir.');
+                } else {
+                    mostrarToast('❌ Erro ao excluir conta: ' + error.message);
+                }
+            }
+        }
+
+        // ===== FUNÇÕES ADMINISTRATIVAS =====
+
+        // Verificar se usuário é admin
+        async function verificarAdmin() {
+            if (!currentUser) {
+                mostrarToast('⚠️ Você precisa estar logado!');
+                return;
+            }
+
+            try {
+                // Buscar role do usuário no Firestore
+                const doc = await db.collection('usuarios').doc(currentUser.uid).get();
+
+                if (!doc.exists) {
+                    mostrarToast('⚠️ Perfil não encontrado');
+                    showTab('novo', null);
+                    return;
+                }
+
+                const perfil = doc.data();
+                const isAdmin = perfil.role === 'admin';
+
+                if (isAdmin) {
+                    document.getElementById('adminTab').style.display = 'block';
+                } else {
+                    mostrarToast('⚠️ Você não tem permissão de administrador');
+                    showTab('novo', null);
+                }
+            } catch (error) {
+                console.error('❌ Erro ao verificar admin:', error);
+            }
+        }
+
+        // Verificar se usuário é admin (sem mensagem de erro)
+        async function verificarAdminSilencioso() {
+            if (!currentUser) return;
+
+            try {
+                // Buscar role do usuário no Firestore
+                const doc = await db.collection('usuarios').doc(currentUser.uid).get();
+
+                if (!doc.exists) return;
+
+                const perfil = doc.data();
+                const isAdmin = perfil.role === 'admin';
+
+                if (isAdmin) {
+                    document.getElementById('adminTab').style.display = 'block';
+                    // Carregar dashboard automaticamente
+                    carregarDashboardAdmin();
+                    console.log('✅ Usuário é admin - aba administrativa habilitada');
+                }
+            } catch (error) {
+                console.error('❌ Erro ao verificar admin:', error);
+            }
+        }
+
+        // ===== DASHBOARD ADMINISTRATIVO =====
+
+        // Carregar estatísticas do dashboard
+        async function carregarDashboardAdmin() {
+            if (!currentUser) {
+                mostrarToast('⚠️ Você precisa estar logado!');
+                return;
+            }
+
+            try {
+                console.log('📊 Carregando dashboard administrativo...');
+
+                // Buscar todos os usuários
+                const usuariosSnapshot = await db.collection('usuarios').get();
+                const totalUsuarios = usuariosSnapshot.size;
+
+                // Calcular usuários ativos (últimos 7 dias)
+                const seteDiasAtras = new Date();
+                seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+
+                let usuariosAtivos = 0;
+                let usuariosInativos = 0;
+                let totalRegistros = 0;
+
+                // Processar cada usuário
+                for (const userDoc of usuariosSnapshot.docs) {
+                    const userData = userDoc.data();
+
+                    // Verificar status
+                    if (userData.status === 'inativo') {
+                        usuariosInativos++;
+                    }
+
+                    // Verificar última atividade
+                    if (userData.ultimaAtividade) {
+                        const ultimaAtividade = userData.ultimaAtividade.toDate();
+                        if (ultimaAtividade >= seteDiasAtras) {
+                            usuariosAtivos++;
+                        }
+                    }
+
+                    // Contar registros do usuário
+                    const registrosSnapshot = await db.collection('usuarios')
+                        .doc(userDoc.id)
+                        .collection('registros')
+                        .get();
+                    totalRegistros += registrosSnapshot.size;
+                }
+
+                // Atualizar interface
+                document.getElementById('totalUsuarios').textContent = totalUsuarios;
+                document.getElementById('usuariosAtivos').textContent = usuariosAtivos;
+                document.getElementById('totalRegistros').textContent = totalRegistros;
+                document.getElementById('usuariosInativos').textContent = usuariosInativos;
+
+                console.log('✅ Dashboard carregado:', {
+                    total: totalUsuarios,
+                    ativos: usuariosAtivos,
+                    registros: totalRegistros,
+                    inativos: usuariosInativos
+                });
+
+            } catch (error) {
+                console.error('❌ Erro ao carregar dashboard:', error);
+                mostrarToast('❌ Erro ao carregar estatísticas');
+            }
+        }
+
+        // Carregar lista de usuários (admin)
+        async function carregarListaUsuarios() {
+            if (!currentUser) {
+                mostrarToast('⚠️ Você precisa estar logado!');
+                return;
+            }
+
+            try {
+                console.log('📋 Carregando lista de usuários...');
+                const usuariosRef = db.collection('usuarios');
+                const snapshot = await usuariosRef.get();
+
+                const usersList = document.getElementById('usersList');
+                usersList.innerHTML = '';
+
+                if (snapshot.empty) {
+                    usersList.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Nenhum usuário cadastrado</p>';
+                    return;
+                }
+
+                const usuarios = [];
+
+                // Buscar usuários e contar seus registros
+                for (const doc of snapshot.docs) {
+                    const userData = doc.data();
+
+                    // Contar registros do usuário
+                    const registrosSnapshot = await db.collection('usuarios')
+                        .doc(doc.id)
+                        .collection('registros')
+                        .get();
+
+                    usuarios.push({
+                        uid: doc.id,
+                        ...userData,
+                        totalRegistros: registrosSnapshot.size
+                    });
+                }
+
+                // Ordenar por data de criação (mais recentes primeiro)
+                usuarios.sort((a, b) => {
+                    const dateA = a.criadoEm?.toDate() || new Date(0);
+                    const dateB = b.criadoEm?.toDate() || new Date(0);
+                    return dateB - dateA;
+                });
+
+                usuarios.forEach(usuario => {
+                    const userItem = document.createElement('div');
+                    userItem.className = 'user-item';
+
+                    const dataCriacao = usuario.criadoEm?.toDate()
+                        ? usuario.criadoEm.toDate().toLocaleDateString('pt-BR')
+                        : 'Data desconhecida';
+
+                    // Formatar última atividade
+                    let ultimaAtividadeTexto = 'Nunca';
+                    if (usuario.ultimaAtividade) {
+                        const dataAtividade = usuario.ultimaAtividade.toDate();
+                        const diasAtras = Math.floor((new Date() - dataAtividade) / (1000 * 60 * 60 * 24));
+                        if (diasAtras === 0) {
+                            ultimaAtividadeTexto = 'Hoje';
+                        } else if (diasAtras === 1) {
+                            ultimaAtividadeTexto = 'Ontem';
+                        } else if (diasAtras < 7) {
+                            ultimaAtividadeTexto = `${diasAtras} dias atrás`;
+                        } else if (diasAtras < 30) {
+                            ultimaAtividadeTexto = `${Math.floor(diasAtras / 7)} semanas atrás`;
+                        } else {
+                            ultimaAtividadeTexto = dataAtividade.toLocaleDateString('pt-BR');
+                        }
+                    }
+
+                    // Badge de role
+                    const roleBadge = usuario.role === 'admin'
+                        ? '<span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-left: 10px;">🔐 ADMIN</span>'
+                        : '';
+
+                    // Badge de status
+                    const statusBadge = usuario.status === 'inativo'
+                        ? '<span style="background: #e74c3c; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-left: 10px;">🚫 INATIVO</span>'
+                        : '<span style="background: #27ae60; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-left: 10px;">✅ ATIVO</span>';
+
+                    userItem.innerHTML = `
+                        <div class="user-item-info">
+                            <div class="user-item-name">
+                                ${usuario.nomeCompleto || 'Nome não informado'}
+                                ${roleBadge}
+                                ${statusBadge}
+                            </div>
+                            <div class="user-item-email">${usuario.email || 'Email não informado'}</div>
+                            <div class="user-item-email">
+                                📅 Membro desde: ${dataCriacao} |
+                                🕒 Última atividade: ${ultimaAtividadeTexto} |
+                                📝 ${usuario.totalRegistros} registro(s)
+                            </div>
+                        </div>
+                        <div class="user-item-actions">
+                            <button class="btn-delete-user" style="background: var(--primary);" onclick="editarUsuarioAdmin('${usuario.uid}')">
+                                ✏️ Editar
+                            </button>
+                            <button class="btn-delete-user" onclick="excluirUsuarioAdmin('${usuario.uid}', '${usuario.email}')">
+                                🗑️ Excluir
+                            </button>
+                        </div>
+                    `;
+
+                    usersList.appendChild(userItem);
+                });
+
+                mostrarToast(`✅ ${usuarios.length} usuário(s) carregado(s)`);
+
+            } catch (error) {
+                console.error('❌ Erro ao carregar usuários:', error);
+                mostrarToast('❌ Erro ao carregar usuários');
+            }
+        }
+
+        // Excluir usuário (admin)
+        async function excluirUsuarioAdmin(uid, email) {
+            if (!confirm(`⚠️ Deseja realmente excluir o usuário:\n\n${email}\n\nTodos os dados serão permanentemente removidos!`)) {
+                return;
+            }
+
+            try {
+                console.log('🗑️ Excluindo usuário:', uid);
+
+                // 1. Deletar todos os registros do usuário
+                const registrosRef = db.collection('usuarios').doc(uid).collection('registros');
+                const snapshot = await registrosRef.get();
+
+                const batch = db.batch();
+                snapshot.docs.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                console.log('✅ Registros do usuário excluídos');
+
+                // 2. Deletar perfil do usuário
+                await db.collection('usuarios').doc(uid).delete();
+                console.log('✅ Perfil do usuário excluído');
+
+                // NOTA: Não podemos deletar a conta do Firebase Auth pelo lado do cliente
+                // Isso requer Firebase Admin SDK no servidor
+                console.log('⚠️ IMPORTANTE: A conta no Firebase Auth não foi removida.');
+                console.log('   Para remover completamente, use o Console do Firebase ou Admin SDK');
+
+                mostrarToast('✅ Dados do usuário excluídos do Firestore');
+
+                // Recarregar lista
+                carregarListaUsuarios();
+
+            } catch (error) {
+                console.error('❌ Erro ao excluir usuário:', error);
+                mostrarToast('❌ Erro ao excluir usuário');
+            }
+        }
+
+        // Mostrar formulário de novo usuário
+        function mostrarFormularioNovoUsuario() {
+            document.getElementById('novoUsuarioForm').style.display = 'block';
+            // Limpar campos
+            document.getElementById('novoNomeCompleto').value = '';
+            document.getElementById('novoEmail').value = '';
+            document.getElementById('novoSenha').value = '';
+            document.getElementById('novoDataNascimento').value = '';
+            document.getElementById('novoGenero').value = '';
+
+            // Scroll até o formulário
+            document.getElementById('novoUsuarioForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Ocultar formulário de novo usuário
+        function ocultarFormularioNovoUsuario() {
+            document.getElementById('novoUsuarioForm').style.display = 'none';
+        }
+
+        // Criar novo usuário (admin)
+        async function criarNovoUsuario() {
+            if (!currentUser) {
+                mostrarToast('⚠️ Você precisa estar logado!');
+                return;
+            }
+
+            try {
+                const nomeCompleto = document.getElementById('novoNomeCompleto').value.trim();
+                const email = document.getElementById('novoEmail').value.trim();
+                const senha = document.getElementById('novoSenha').value;
+                const dataNascimento = document.getElementById('novoDataNascimento').value;
+                const genero = document.getElementById('novoGenero').value;
+                const role = document.getElementById('novoRole').value;
+
+                // Validação
+                if (!nomeCompleto || !email || !senha) {
+                    mostrarToast('⚠️ Preencha todos os campos obrigatórios (Nome, Email e Senha)');
+                    return;
+                }
+
+                if (senha.length < 6) {
+                    mostrarToast('⚠️ A senha deve ter no mínimo 6 caracteres');
+                    return;
+                }
+
+                // Validar formato de email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    mostrarToast('⚠️ Email inválido');
+                    return;
+                }
+
+                console.log('👤 Criando novo usuário...');
+
+                // IMPORTANTE: Como admin não pode criar usuários diretamente no Firebase Auth do lado do cliente,
+                // vamos criar apenas o perfil no Firestore
+                // O usuário terá que se registrar normalmente na primeira vez
+
+                // Gerar um ID único para o novo usuário (temporário até ele se registrar)
+                const tempUserId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+                const perfil = {
+                    nomeCompleto,
+                    email,
+                    dataNascimento: dataNascimento || null,
+                    genero: genero || null,
+                    role: role || 'user',
+                    status: 'ativo',
+                    criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                    criadoPorAdmin: true,
+                    senhaTemporaria: senha, // Apenas para referência do admin
+                    aguardandoPrimeiroLogin: true
+                };
+
+                await db.collection('usuarios').doc(tempUserId).set(perfil);
+
+                console.log('✅ Perfil criado com sucesso');
+
+                alert(`✅ Usuário criado com sucesso!\n\nInforme ao usuário:\n\nEmail: ${email}\nSenha: ${senha}\n\nO usuário deve fazer o cadastro normal usando esses dados.`);
+
+                // Limpar formulário e ocultar
+                ocultarFormularioNovoUsuario();
+
+                // Recarregar lista
+                carregarListaUsuarios();
+
+            } catch (error) {
+                console.error('❌ Erro ao criar usuário:', error);
+                mostrarToast('❌ Erro ao criar usuário: ' + error.message);
+            }
+        }
+
+        // Editar usuário existente (admin)
+        async function editarUsuarioAdmin(uid) {
+            if (!currentUser) {
+                mostrarToast('⚠️ Você precisa estar logado!');
+                return;
+            }
+
+            try {
+                console.log('📝 Carregando dados do usuário:', uid);
+
+                // Carregar dados do usuário
+                const doc = await db.collection('usuarios').doc(uid).get();
+
+                if (!doc.exists) {
+                    mostrarToast('❌ Usuário não encontrado');
+                    return;
+                }
+
+                const usuario = doc.data();
+
+                // Preencher formulário
+                document.getElementById('editarUsuarioUid').value = uid;
+                document.getElementById('editarNomeCompleto').value = usuario.nomeCompleto || '';
+                document.getElementById('editarEmail').value = usuario.email || '';
+                document.getElementById('editarDataNascimento').value = usuario.dataNascimento || '';
+                document.getElementById('editarGenero').value = usuario.genero || '';
+                document.getElementById('editarRole').value = usuario.role || 'user';
+                document.getElementById('editarStatus').value = usuario.status || 'ativo';
+
+                // Mostrar formulário e esconder outros
+                document.getElementById('editarUsuarioForm').style.display = 'block';
+                document.getElementById('novoUsuarioForm').style.display = 'none';
+
+                // Scroll até o formulário
+                document.getElementById('editarUsuarioForm').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                console.error('❌ Erro ao carregar usuário:', error);
+                mostrarToast('❌ Erro ao carregar usuário');
+            }
+        }
+
+        // Cancelar edição de usuário (admin)
+        function cancelarEdicaoUsuarioAdmin() {
+            document.getElementById('editarUsuarioForm').style.display = 'none';
+        }
+
+        // Salvar edição de usuário (admin)
+        async function salvarEdicaoUsuarioAdmin() {
+            if (!currentUser) {
+                mostrarToast('⚠️ Você precisa estar logado!');
+                return;
+            }
+
+            try {
+                const uid = document.getElementById('editarUsuarioUid').value;
+                const nomeCompleto = document.getElementById('editarNomeCompleto').value.trim();
+                const dataNascimento = document.getElementById('editarDataNascimento').value;
+                const genero = document.getElementById('editarGenero').value;
+                const role = document.getElementById('editarRole').value;
+                const status = document.getElementById('editarStatus').value;
+
+                // Validação
+                if (!nomeCompleto) {
+                    mostrarToast('⚠️ O nome completo é obrigatório');
+                    return;
+                }
+
+                console.log('💾 Salvando alterações do usuário:', uid);
+
+                // Atualizar no Firestore
+                const perfilAtualizado = {
+                    nomeCompleto,
+                    dataNascimento: dataNascimento || null,
+                    genero: genero || null,
+                    role: role || 'user',
+                    status: status || 'ativo',
+                    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                    atualizadoPorAdmin: currentUser.email
+                };
+
+                await db.collection('usuarios').doc(uid).update(perfilAtualizado);
+
+                console.log('✅ Usuário atualizado com sucesso');
+                mostrarToast('✅ Usuário atualizado com sucesso!');
+
+                // Ocultar formulário
+                cancelarEdicaoUsuarioAdmin();
+
+                // Recarregar lista e dashboard
+                carregarListaUsuarios();
+                carregarDashboardAdmin();
+
+            } catch (error) {
+                console.error('❌ Erro ao atualizar usuário:', error);
+                mostrarToast('❌ Erro ao atualizar usuário: ' + error.message);
             }
         }
 
