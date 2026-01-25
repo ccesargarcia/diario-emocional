@@ -1530,8 +1530,8 @@
             document.getElementById('loginScreen').classList.remove('hidden');
         }
 
-        // Timeout de segurança - FORÇA mostrar login após 3 segundos
-        setTimeout(showLoginFallback, 3000);
+        // Timeout de segurança - FORÇA mostrar login após 1 segundo
+        setTimeout(showLoginFallback, 1000);
 
         // Tentar inicializar Firebase
         try {
@@ -1555,7 +1555,10 @@
                 // Verificar autenticação
                 auth.onAuthStateChanged(user => {
                     console.log('👤 Estado de autenticação:', user ? 'Logado' : 'Deslogado');
-                    document.getElementById('loadingScreen').classList.add('hidden');
+
+                    // Garantir que esconde o loading
+                    const loadingEl = document.getElementById('loadingScreen');
+                    if (loadingEl) loadingEl.classList.add('hidden');
 
                     if (user) {
                         currentUser = user;
@@ -1576,6 +1579,12 @@
         function showApp() {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('appScreen').classList.add('active');
+        }
+
+        function showLogin() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('appScreen').classList.remove('active');
         }
 
         function showError(message) {
@@ -1668,6 +1677,12 @@
                 console.error('❌ Erro ao sair:', error);
                 currentUser = null;
                 showLogin();
+            }
+        }
+
+        // Salvar registro no Firestore
+        async function salvarRegistroFirebase(registro) {
+            if (!currentUser) return;
 
             try {
                 await db.collection('usuarios').doc(currentUser.uid)
@@ -1746,7 +1761,7 @@
             } else if (!currentUser) {
                 console.warn('⚠️ Usuário não logado - dados salvos apenas localmente');
             }
-        };
+        }; // Fechamento da função window.salvarRegistro
 
         // Permitir Enter para fazer login
         document.addEventListener('DOMContentLoaded', () => {
@@ -1759,7 +1774,6 @@
         });
     </script>
 
-</script>
     </div>
 </body>
 </html>
