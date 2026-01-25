@@ -1150,6 +1150,20 @@
             registros.push(registro);
             localStorage.setItem('diarioEmocional', JSON.stringify(registros));
 
+            // Sincronizar com Firebase se estiver logado
+            if (currentUser) {
+                console.log('☁️ Sincronizando registro com Firebase...');
+                salvarRegistroFirebase(registro).then(() => {
+                    console.log('✅ Registro sincronizado com sucesso!');
+                    document.getElementById('syncStatus').textContent = '✓ Sincronizado';
+                }).catch(err => {
+                    console.error('❌ Erro ao sincronizar:', err);
+                    document.getElementById('syncStatus').textContent = '⚠ Erro na sincronização';
+                });
+            } else {
+                console.warn('⚠️ Usuário não logado - dados salvos apenas localmente');
+            }
+
             mostrarToast('✅ Registro salvo com sucesso!');
             limparFormulario();
             setTimeout(() => showTab('historico'), 1500);
@@ -1251,6 +1265,17 @@
 
             const registros = getRegistros().filter(r => r.id !== id);
             localStorage.setItem('diarioEmocional', JSON.stringify(registros));
+            
+            // Sincronizar exclusão com Firebase se estiver logado
+            if (currentUser) {
+                console.log('☁️ Excluindo registro do Firebase...');
+                excluirRegistroFirebase(id).then(() => {
+                    console.log('✅ Registro excluído do Firebase!');
+                }).catch(err => {
+                    console.error('❌ Erro ao excluir do Firebase:', err);
+                });
+            }
+            
             carregarHistorico();
             atualizarEstatisticas();
             mostrarToast('🗑️ Registro deletado');
@@ -1530,9 +1555,6 @@
             document.getElementById('loginScreen').classList.remove('hidden');
         }
 
-        // Timeout de segurança - FORÇA mostrar login após 3 segundos
-        setTimeout(showLoginFallback, 3000);
-
         // Tentar inicializar Firebase
         try {
             console.log('🔄 Tentando inicializar Firebase...');
@@ -1545,15 +1567,10 @@
                 auth = firebase.auth();
                 db = firebase.firestore();
 
-                // Ativar persistência de sessão
-                auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-                    .then(() => console.log('🔒 Sessão persistente ativada'))
-                    .catch(err => console.warn('⚠️ Erro persistência:', err));
-
                 console.log('✅ Firebase inicializado com sucesso');
 
-                // Verificar autenticação
-                auth.onAuthStateChanged(user => {
+                // Verificar autenticação - onAuthStateChanged é chamado imediatamente
+                auth.onAuthStateChanged(async user => {
                     console.log('👤 Estado de autenticação:', user ? 'Logado' : 'Deslogado');
 
                     // Garantir que esconde o loading
@@ -1563,16 +1580,16 @@
                     if (user) {
                         console.log('✅ Usuário autenticado:', user.email);
                         currentUser = user;
-                        
+
                         // Atualizar informações do usuário
                         const userName = document.getElementById('userName');
                         const userEmail = document.getElementById('userEmail');
                         if (userName) userName.textContent = user.displayName || user.email.split('@')[0];
                         if (userEmail) userEmail.textContent = user.email;
-                        
-                        // Carregar dados e mostrar app
-                        carregarDadosFirebase();
+
+                        // Mostrar app imediatamente e carregar dados em background
                         showApp();
+                        carregarDadosFirebase().catch(err => console.warn('Erro ao carregar dados:', err));
                     } else {
                         console.log('❌ Usuário não autenticado');
                         showLogin();
@@ -1590,12 +1607,10 @@
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('appScreen').classList.remove('hidden');
             document.getElementById('appScreen').classList.add('active');
-            
-            // Inicializar app (formulários, histórico, etc)
-            setTimeout(() => {
-                inicializarApp();
-                console.log('✅ App inicializado!');
-            }, 100);
+
+            // Inicializar app imediatamente
+            inicializarApp();
+            console.log('✅ App inicializado!');
         }
 
         function showLogin() {
@@ -1647,6 +1662,10 @@
             }
 
             try {
+                // Garantir persistência LOCAL antes de fazer login
+                await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                console.log('🔒 Persistência LOCAL ativada');
+
                 if (isLoginMode) {
                     console.log('📧 Fazendo login...');
                     const result = await auth.signInWithEmailAndPassword(email, password);
@@ -1656,6 +1675,8 @@
                     const result = await auth.createUserWithEmailAndPassword(email, password);
                     console.log('✅ Conta criada:', result.user.email);
                 }
+
+                // onAuthStateChanged vai chamar showApp() automaticamente
             } catch (error) {
                 console.error('❌ Erro completo:', error);
                 console.error('Código:', error.code);
@@ -1688,6 +1709,10 @@
 
         async function handleGoogleAuth() {
             try {
+                // Garantir persistência LOCAL antes de fazer login
+                await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                console.log('🔒 Persistência LOCAL ativada (Google)');
+
                 const provider = new firebase.auth.GoogleAuthProvider();
                 await auth.signInWithPopup(provider);
             } catch (error) {
@@ -1746,25 +1771,52 @@
             if (!currentUser) return;
 
             try {
+                console.log('📥 Carregando dados do Firebase...');
                 const snapshot = await db.collection('usuarios').doc(currentUser.uid)
                     .collection('registros')
                     .orderBy('criadoEm', 'desc')
                     .get();
 
-                const registros = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+                const registrosFirebase = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: data.id || doc.id, // Usar o ID original ou ID do documento
+                        dataHora: data.dataHora,
+                        situacao: data.situacao,
+                        pensamento: data.pensamento,
+                        emocaoCentral: data.emocaoCentral,
+                        emocaoIntermediaria: data.emocaoIntermediaria,
+                        emocaoEspecifica: data.emocaoEspecifica,
+                        intensidade: data.intensidade,
+                        comportamento: data.comportamento
+                    };
+                });
 
-                // Salvar no localStorage também (cache local)
-                localStorage.setItem('registrosEmocionais', JSON.stringify(registros));
+                console.log(`✅ ${registrosFirebase.length} registros carregados do Firebase`);
+
+                // Mesclar com dados locais (dar prioridade aos dados do Firebase)
+                const registrosLocais = getRegistros();
+                const todosDados = [...registrosFirebase];
+                
+                // Adicionar registros locais que não estão no Firebase
+                registrosLocais.forEach(local => {
+                    if (!todosDados.find(fb => fb.id === local.id)) {
+                        todosDados.push(local);
+                    }
+                });
+
+                // Salvar tudo no localStorage
+                localStorage.setItem('diarioEmocional', JSON.stringify(todosDados));
 
                 // Atualizar histórico se estiver na aba
                 if (document.getElementById('historico').classList.contains('active')) {
                     carregarHistorico();
                 }
+                
+                document.getElementById('syncStatus').textContent = '✓ Sincronizado';
             } catch (error) {
-                console.error('Erro ao carregar:', error);
+                console.error('❌ Erro ao carregar dados do Firebase:', error);
+                document.getElementById('syncStatus').textContent = '⚠ Erro ao sincronizar';
             }
         }
 
@@ -1781,28 +1833,6 @@
                 console.error('Erro ao excluir:', error);
             }
         }
-
-        // Sobrescrever função salvarRegistro original para usar Firebase
-        const salvarRegistroOriginal = window.salvarRegistro;
-        window.salvarRegistro = async function() {
-            console.log('💾 Salvando registro...');
-
-            // Chamar função original que salva no localStorage
-            salvarRegistroOriginal();
-
-            // Aguardar um pouco para garantir que salvou no localStorage
-            await new Promise(resolve => setTimeout(resolve, 100));
-
-            // Pegar o último registro salvo
-            const registros = JSON.parse(localStorage.getItem('registrosEmocionais') || '[]');
-            if (registros.length > 0 && currentUser) {
-                const ultimoRegistro = registros[0]; // Mais recente
-                console.log('☁️ Sincronizando com Firebase...');
-                await salvarRegistroFirebase(ultimoRegistro);
-            } else if (!currentUser) {
-                console.warn('⚠️ Usuário não logado - dados salvos apenas localmente');
-            }
-        }; // Fechamento da função window.salvarRegistro
 
         // Permitir Enter para fazer login
         document.addEventListener('DOMContentLoaded', () => {
