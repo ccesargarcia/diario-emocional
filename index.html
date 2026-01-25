@@ -1125,7 +1125,7 @@
                     }
                 });
             }
-            
+
             document.getElementById(tabName).classList.add('active');
 
             if (tabName === 'historico') carregarHistorico();
@@ -1163,9 +1163,19 @@
             // Sincronizar com Firebase se estiver logado
             if (currentUser) {
                 console.log('☁️ Sincronizando registro com Firebase...');
-                salvarRegistroFirebase(registro).then(() => {
-                    console.log('✅ Registro sincronizado com sucesso!');
-                    document.getElementById('syncStatus').textContent = '✓ Sincronizado';
+                salvarRegistroFirebase(registro).then(firebaseId => {
+                    if (firebaseId) {
+                        // Atualizar o registro local com o ID do Firebase
+                        registro.firebaseId = firebaseId;
+                        const registrosAtualizados = getRegistros();
+                        const index = registrosAtualizados.findIndex(r => r.id === registro.id);
+                        if (index !== -1) {
+                            registrosAtualizados[index] = registro;
+                            localStorage.setItem('diarioEmocional', JSON.stringify(registrosAtualizados));
+                        }
+                        console.log('✅ Registro sincronizado com sucesso! Firebase ID:', firebaseId);
+                        document.getElementById('syncStatus').textContent = '✓ Sincronizado';
+                    }
                 }).catch(err => {
                     console.error('❌ Erro ao sincronizar:', err);
                     document.getElementById('syncStatus').textContent = '⚠ Erro na sincronização';
@@ -1273,19 +1283,27 @@
         function deletarRegistro(id) {
             if (!confirm('Tem certeza que deseja deletar este registro?')) return;
 
-            const registros = getRegistros().filter(r => r.id !== id);
-            localStorage.setItem('diarioEmocional', JSON.stringify(registros));
-            
-            // Sincronizar exclusão com Firebase se estiver logado
-            if (currentUser) {
-                console.log('☁️ Excluindo registro do Firebase...');
-                excluirRegistroFirebase(id).then(() => {
+            // Encontrar o registro para pegar o firebaseId
+            const registros = getRegistros();
+            const registro = registros.find(r => r.id === id);
+            const firebaseId = registro?.firebaseId;
+
+            // Remover do localStorage
+            const registrosRestantes = registros.filter(r => r.id !== id);
+            localStorage.setItem('diarioEmocional', JSON.stringify(registrosRestantes));
+
+            // Sincronizar exclusão com Firebase se estiver logado E tiver firebaseId
+            if (currentUser && firebaseId) {
+                console.log('☁️ Excluindo registro do Firebase...', firebaseId);
+                excluirRegistroFirebase(firebaseId).then(() => {
                     console.log('✅ Registro excluído do Firebase!');
                 }).catch(err => {
                     console.error('❌ Erro ao excluir do Firebase:', err);
                 });
+            } else if (currentUser && !firebaseId) {
+                console.warn('⚠️ Registro não tem firebaseId - não pode excluir da nuvem');
             }
-            
+
             carregarHistorico();
             atualizarEstatisticas();
             mostrarToast('🗑️ Registro deletado');
@@ -1758,21 +1776,25 @@
 
         // Salvar registro no Firestore
         async function salvarRegistroFirebase(registro) {
-            if (!currentUser) return;
+            if (!currentUser) return null;
 
             try {
-                await db.collection('usuarios').doc(currentUser.uid)
+                const docRef = await db.collection('usuarios').doc(currentUser.uid)
                     .collection('registros').add({
                         ...registro,
                         criadoEm: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
+                console.log('✅ Registro salvo no Firebase com ID:', docRef.id);
                 document.getElementById('syncStatus').textContent = '✓ Sincronizado';
                 document.getElementById('syncStatus').style.color = 'var(--success)';
+
+                return docRef.id; // Retornar ID do documento
             } catch (error) {
                 console.error('Erro ao salvar:', error);
                 document.getElementById('syncStatus').textContent = '⚠ Erro na sincronização';
                 document.getElementById('syncStatus').style.color = 'var(--danger)';
+                return null;
             }
         }
 
@@ -1790,7 +1812,8 @@
                 const registrosFirebase = snapshot.docs.map(doc => {
                     const data = doc.data();
                     return {
-                        id: data.id || doc.id, // Usar o ID original ou ID do documento
+                        id: data.id, // ID local original
+                        firebaseId: doc.id, // ID do documento do Firebase
                         dataHora: data.dataHora,
                         situacao: data.situacao,
                         pensamento: data.pensamento,
@@ -1807,7 +1830,7 @@
                 // Mesclar com dados locais (dar prioridade aos dados do Firebase)
                 const registrosLocais = getRegistros();
                 const todosDados = [...registrosFirebase];
-                
+
                 // Adicionar registros locais que não estão no Firebase
                 registrosLocais.forEach(local => {
                     if (!todosDados.find(fb => fb.id === local.id)) {
@@ -1822,7 +1845,7 @@
                 if (document.getElementById('historico').classList.contains('active')) {
                     carregarHistorico();
                 }
-                
+
                 document.getElementById('syncStatus').textContent = '✓ Sincronizado';
             } catch (error) {
                 console.error('❌ Erro ao carregar dados do Firebase:', error);
