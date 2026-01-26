@@ -9,8 +9,72 @@
     <title>Diário Emocional - TCC</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <style>
+                                                                        /* Cores personalizadas para ícones do menu inferior */
+                                                                        .bottom-nav-btn .material-icons {
+                                                                            color: var(--primary);
+                                                                            transition: color 0.2s;
+                                                                        }
+                                                                        .bottom-nav-btn.active .material-icons {
+                                                                            color: var(--secondary);
+                                                                        }
+                                                                        #navNovo .material-icons { color: #48bb78; }
+                                                                        #navHistorico .material-icons { color: #764ba2; }
+                                                                        #navExportar .material-icons { color: #ecc94b; }
+                                                                        #navPerfil .material-icons { color: #667eea; }
+                                                                        #navAdmin .material-icons { color: #f56565; }
+                                                                        #navConfig .material-icons { color: #5568d3; }
+                                                                /* Material Icons para botões */
+                                                                .material-icons {
+                                                                    font-size: 24px;
+                                                                    vertical-align: middle;
+                                                                }
+                                                                /* Feedback visual para mensagens */
+                                                                .toast {
+                                                                    position: fixed;
+                                                                    bottom: 100px;
+                                                                    left: 50%;
+                                                                    transform: translateX(-50%) translateY(100px);
+                                                                    background: var(--primary);
+                                                                    color: white;
+                                                                    padding: 15px 25px;
+                                                                    border-radius: 25px;
+                                                                    box-shadow: 0 4px 15px var(--shadow);
+                                                                    z-index: 1000;
+                                                                    opacity: 0;
+                                                                    visibility: hidden;
+                                                                    transition: all 0.3s ease-in-out;
+                                                                    font-size: 16px;
+                                                                    display: flex;
+                                                                    align-items: center;
+                                                                    gap: 10px;
+                                                                }
+                                                                .toast.show {
+                                                                    transform: translateX(-50%) translateY(0);
+                                                                    opacity: 1;
+                                                                    visibility: visible;
+                                                                }
+                                                                /* Tipografia para títulos */
+                                                                h1, h2, h3 {
+                                                                    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+                                                                    font-weight: 800;
+                                                                    letter-spacing: 1px;
+                                                                    color: var(--primary);
+                                                                    margin-bottom: 12px;
+                                                                    text-shadow: 0 2px 8px rgba(102,126,234,0.08);
+                                                                }
+                                                                /* Responsividade aprimorada */
+                                                                @media (max-width: 500px) {
+                                                                    .tab, .btn, .form-group {
+                                                                        font-size: 15px !important;
+                                                                        padding: 14px 8px !important;
+                                                                    }
+                                                                    h1, h2, h3 {
+                                                                        font-size: 20px !important;
+                                                                    }
+                                                                }
                                                         /* Bottom navigation para mobile */
                                                         @media (max-width: 700px) {
                                                             .tabs, .hamburger-btn, .side-menu { display: none !important; }
@@ -312,16 +376,19 @@
 
         .tab {
             flex: 1;
-            padding: 15px;
+            padding: 18px 20px;
+            margin: 0 6px;
             text-align: center;
             background: var(--bg-card);
             border: none;
             color: var(--text-secondary);
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: background 0.2s, color 0.2s, border-bottom 0.2s;
             border-bottom: 3px solid transparent;
+            border-radius: 10px 10px 0 0;
+        }
         }
 
         .tab.active {
@@ -331,18 +398,24 @@
 
         .tab-content {
             display: none;
-            padding: 20px;
+            padding: 28px 18px;
+            animation: fadeInTab 0.4s;
         }
 
         .tab-content.active {
             display: block;
+            animation: fadeInTab 0.4s;
+        }
+        @keyframes fadeInTab {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .form-group {
             background: var(--bg-card);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 15px;
+            border-radius: 18px;
+            padding: 28px 22px;
+            margin-bottom: 22px;
             box-shadow: 0 2px 10px var(--shadow-color);
             transition: background 0.3s ease;
         }
@@ -392,12 +465,14 @@
 
         .intensity-slider {
             width: 100%;
-            height: 8px;
-            border-radius: 5px;
-            background: linear-gradient(to right, #48bb78, #ecc94b, #f56565);
+            height: 10px;
+            border-radius: 6px;
+            background: linear-gradient(to right, #48bb78 0%, #ecc94b 50%, #f56565 100%);
             outline: none;
             -webkit-appearance: none;
             appearance: none;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+            transition: background 0.3s;
         }
 
         .intensity-slider::-webkit-slider-track {
@@ -417,23 +492,33 @@
         .intensity-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 25px;
-            height: 25px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
-            background: white;
+            background: var(--thumb-color, white);
             cursor: pointer;
-            box-shadow: 0 2px 5px var(--shadow);
+            box-shadow: 0 4px 12px var(--shadow);
             border: 3px solid var(--primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .intensity-slider:active::-webkit-slider-thumb {
+            border-color: #764ba2;
+            box-shadow: 0 6px 18px var(--primary);
         }
 
         .intensity-slider::-moz-range-thumb {
-            width: 25px;
-            height: 25px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
-            background: white;
+            background: var(--thumb-color, white);
             cursor: pointer;
-            box-shadow: 0 2px 5px var(--shadow);
+            box-shadow: 0 4px 12px var(--shadow);
             border: 3px solid var(--primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .intensity-slider:active::-moz-range-thumb {
+            border-color: #764ba2;
+            box-shadow: 0 6px 18px var(--primary);
         }
 
         .intensity-value {
@@ -531,14 +616,21 @@
 
         .btn {
             flex: 1;
-            padding: 18px;
+            padding: 20px 0;
+            margin: 0 6px;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 14px;
+            font-size: 17px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: background 0.2s, color 0.2s, transform 0.1s;
             box-shadow: 0 4px 10px var(--shadow);
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .btn:hover {
+            filter: brightness(1.08);
         }
 
         .btn-primary {
@@ -1132,12 +1224,12 @@
 <body>
             <!-- Bottom navigation para mobile -->
             <nav class="bottom-nav" id="bottomNav" style="display:none;">
-                <button class="bottom-nav-btn" id="navNovo" onclick="showTab('novo', event)"><span class="icon">➕</span><span>Novo</span></button>
-                <button class="bottom-nav-btn" id="navHistorico" onclick="showTab('historico', event)"><span class="icon">📖</span><span>Histórico</span></button>
-                <button class="bottom-nav-btn" id="navExportar" onclick="showTab('exportar', event)"><span class="icon">📤</span><span>Exportar</span></button>
-                <button class="bottom-nav-btn" id="navPerfil" onclick="showTab('perfil', event)"><span class="icon">👤</span><span>Perfil</span></button>
-                <button class="bottom-nav-btn" id="navAdmin" onclick="showTab('admin', event)" style="display:none;visibility:hidden;"><span class="icon">🔐</span><span>Admin</span></button>
-                <button class="bottom-nav-btn" id="navConfig" onclick="showTab('config', event)" style="display:none;visibility:hidden;"><span class="icon">⚙️</span><span>Config</span></button>
+                <button class="bottom-nav-btn" id="navNovo" onclick="showTab('novo', event)"><span class="material-icons">add_circle</span><span>Novo</span></button>
+                <button class="bottom-nav-btn" id="navHistorico" onclick="showTab('historico', event)"><span class="material-icons">history</span><span>Histórico</span></button>
+                <button class="bottom-nav-btn" id="navExportar" onclick="showTab('exportar', event)"><span class="material-icons">file_upload</span><span>Exportar</span></button>
+                <button class="bottom-nav-btn" id="navPerfil" onclick="showTab('perfil', event)"><span class="material-icons">person</span><span>Perfil</span></button>
+                <button class="bottom-nav-btn" id="navAdmin" onclick="showTab('admin', event)" style="display:none;visibility:hidden;"><span class="material-icons">admin_panel_settings</span><span>Admin</span></button>
+                <button class="bottom-nav-btn" id="navConfig" onclick="showTab('config', event)" style="display:none;visibility:hidden;"><span class="material-icons">settings</span><span>Config</span></button>
             </nav>
         <!-- Botão hambúrguer para mobile -->
         <button class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menu" style="display:none;">☰</button>
@@ -1592,6 +1684,21 @@
     <div id="toast" class="toast"></div>
 
     <script>
+                                                // Microinteração: cor do thumb da barra de intensidade muda conforme valor
+                                                document.addEventListener('DOMContentLoaded', function() {
+                                                    var slider = document.querySelector('.intensity-slider');
+                                                    if (slider) {
+                                                        function updateThumbColor() {
+                                                            var val = parseInt(slider.value);
+                                                            var thumbColor = '#48bb78'; // verde
+                                                            if (val >= 4 && val < 7) thumbColor = '#ecc94b'; // amarelo
+                                                            if (val >= 7) thumbColor = '#f56565'; // vermelho
+                                                            slider.style.setProperty('--thumb-color', thumbColor);
+                                                        }
+                                                        slider.addEventListener('input', updateThumbColor);
+                                                        updateThumbColor();
+                                                    }
+                                                });
                                         // Exibir bottom nav apenas no mobile
                                         function updateBottomNavVisibility() {
                                             const nav = document.getElementById('bottomNav');
@@ -3185,10 +3292,16 @@
         }
 
         function showError(message) {
-            const errorDiv = document.getElementById('authError');
-            errorDiv.textContent = message;
-            errorDiv.classList.remove('hidden');
-            setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+            let toast = document.getElementById('toastMsg');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toastMsg';
+                toast.className = 'toast';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = '<span class="material-icons">error_outline</span>' + message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 4000);
         }
 
         function toggleAuthMode() {
