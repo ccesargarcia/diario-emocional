@@ -1136,8 +1136,8 @@
                 <button class="bottom-nav-btn" id="navHistorico" onclick="showTab('historico', event)"><span class="icon">📖</span><span>Histórico</span></button>
                 <button class="bottom-nav-btn" id="navExportar" onclick="showTab('exportar', event)"><span class="icon">📤</span><span>Exportar</span></button>
                 <button class="bottom-nav-btn" id="navPerfil" onclick="showTab('perfil', event)"><span class="icon">👤</span><span>Perfil</span></button>
-                <button class="bottom-nav-btn" id="navAdmin" onclick="showTab('admin', event)" style="display:none;"><span class="icon">🔐</span><span>Admin</span></button>
-                <button class="bottom-nav-btn" id="navConfig" onclick="showTab('config', event)" style="display:none;"><span class="icon">⚙️</span><span>Config</span></button>
+                <button class="bottom-nav-btn" id="navAdmin" onclick="showTab('admin', event)" style="display:none;visibility:hidden;"><span class="icon">🔐</span><span>Admin</span></button>
+                <button class="bottom-nav-btn" id="navConfig" onclick="showTab('config', event)" style="display:none;visibility:hidden;"><span class="icon">⚙️</span><span>Config</span></button>
             </nav>
         <!-- Botão hambúrguer para mobile -->
         <button class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menu" style="display:none;">☰</button>
@@ -3002,15 +3002,13 @@
                                                                                 if (navConfig) navConfig.style.display = 'none';
                                                                             }
                                                                         }, 100);
-                                                // Fallback definitivo: força display dos botões admin/config após showApp
-                                                setTimeout(() => {
-                                                    if (perfil && perfil.role === 'admin') {
-                                                        var navAdmin = document.getElementById('navAdmin');
-                                                        var navConfig = document.getElementById('navConfig');
-                                                        if (navAdmin) navAdmin.style.display = '';
-                                                        if (navConfig) navConfig.style.display = '';
-                                                    }
-                                                }, 800);
+                                                // Exibe instantaneamente os botões admin/config se for admin
+                                                if (perfil && perfil.role === 'admin') {
+                                                    var navAdmin = document.getElementById('navAdmin');
+                                                    var navConfig = document.getElementById('navConfig');
+                                                    if (navAdmin) { navAdmin.style.display = ''; navAdmin.style.visibility = 'visible'; }
+                                                    if (navConfig) { navConfig.style.display = ''; navConfig.style.visibility = 'visible'; }
+                                                }
                         // Garante que os elementos do menu já existem antes de mostrar abas admin/config
                         function tryShowAdminTabs() {
                             const navAdmin = document.getElementById('navAdmin');
