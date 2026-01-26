@@ -2971,12 +2971,27 @@
                             }
                         }
 
-                        // Forçar logout se status mudar para inativo
-                        if (perfil && perfil.status === 'inativo') {
-                            await auth.signOut();
-                            showError('❌ Sua conta foi desativada. Entre em contato com o administrador.');
-                            return;
-                        }
+                        // Monitorar mudanças de permissão em tempo real
+                        let lastRole = perfil.role;
+                        let lastStatus = perfil.status;
+                        if (window.monitorUnsub) { window.monitorUnsub(); window.monitorUnsub = null; }
+                        window.monitorUnsub = db.collection('usuarios').doc(user.uid)
+                            .onSnapshot(function(doc) {
+                                const perfilAtual = doc.data();
+                                if (!perfilAtual) return;
+                                // Se perdeu admin
+                                if (lastRole === 'admin' && perfilAtual.role !== 'admin') {
+                                    auth.signOut();
+                                    showError('❌ Sua permissão de administrador foi removida. Você foi desconectado.');
+                                }
+                                // Se status mudou para inativo
+                                if (lastStatus !== 'inativo' && perfilAtual.status === 'inativo') {
+                                    auth.signOut();
+                                    showError('❌ Seu acesso foi desativado. Você foi desconectado.');
+                                }
+                                lastRole = perfilAtual.role;
+                                lastStatus = perfilAtual.status;
+                            });
 
                         // Atualizar informações do usuário
                         const userName = document.getElementById('userName');
@@ -2993,23 +3008,20 @@
                         if (userEmail) userEmail.textContent = user.email;
 
                         // Mostrar app imediatamente e carregar dados em background
-                                                                        // Garante ocultação dos botões admin/config para não-admins
-                                                                        setTimeout(() => {
-                                                                            if (!perfil || perfil.role !== 'admin') {
-                                                                                var navAdmin = document.getElementById('navAdmin');
-                                                                                var navConfig = document.getElementById('navConfig');
-                                                                                if (navAdmin) navAdmin.style.display = 'none';
-                                                                                if (navConfig) navConfig.style.display = 'none';
-                                                                            }
-                                                                        }, 100);
-                                                // Exibe instantaneamente os botões admin/config se for admin
-                                                if (perfil && perfil.role === 'admin') {
-                                                    var navAdmin = document.getElementById('navAdmin');
-                                                    var navConfig = document.getElementById('navConfig');
-                                                    if (navAdmin) { navAdmin.style.display = ''; navAdmin.style.visibility = 'visible'; }
-                                                    if (navConfig) { navConfig.style.display = ''; navConfig.style.visibility = 'visible'; }
-                                                }
-                        // Garante que os elementos do menu já existem antes de mostrar abas admin/config
+                        setTimeout(() => {
+                            if (!perfil || perfil.role !== 'admin') {
+                                var navAdmin = document.getElementById('navAdmin');
+                                var navConfig = document.getElementById('navConfig');
+                                if (navAdmin) navAdmin.style.display = 'none';
+                                if (navConfig) navConfig.style.display = 'none';
+                            }
+                        }, 100);
+                        if (perfil && perfil.role === 'admin') {
+                            var navAdmin = document.getElementById('navAdmin');
+                            var navConfig = document.getElementById('navConfig');
+                            if (navAdmin) { navAdmin.style.display = ''; navAdmin.style.visibility = 'visible'; }
+                            if (navConfig) { navConfig.style.display = ''; navConfig.style.visibility = 'visible'; }
+                        }
                         function tryShowAdminTabs() {
                             const navAdmin = document.getElementById('navAdmin');
                             const navConfig = document.getElementById('navConfig');
@@ -3022,7 +3034,6 @@
                             return false;
                         }
                         if (!tryShowAdminTabs()) {
-                            // Se ainda não existem, observar o DOM até aparecerem
                             const obs = new MutationObserver(() => {
                                 if (tryShowAdminTabs()) {
                                     obs.disconnect();
@@ -3030,12 +3041,12 @@
                             });
                             obs.observe(document.body, { childList: true, subtree: true });
                         }
-                        // Fallback: força exibição após showApp()
                         setTimeout(() => { mostrarAbaConfigSeAdmin(perfil); }, 500);
                         showApp();
                         carregarDadosFirebase().catch(err => console.warn('Erro ao carregar dados:', err));
                     } else {
                         debugLog('❌ Usuário não autenticado');
+                        if (window.monitorUnsub) { window.monitorUnsub(); window.monitorUnsub = null; }
                         showLogin();
                     }
                 });
