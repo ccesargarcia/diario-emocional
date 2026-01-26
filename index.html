@@ -11,6 +11,36 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
+                                        /* Responsividade para o menu de abas (tabs) no mobile */
+                                        @media (max-width: 700px) {
+                                            .tabs {
+                                                display: flex;
+                                                overflow-x: auto;
+                                                -webkit-overflow-scrolling: touch;
+                                                background: var(--bg-card);
+                                                border-radius: 0 0 15px 15px;
+                                                box-shadow: 0 2px 5px var(--shadow-color);
+                                                scrollbar-width: thin;
+                                                scrollbar-color: var(--primary) var(--bg-card);
+                                            }
+                                            .tab {
+                                                min-width: 120px;
+                                                flex: 0 0 auto;
+                                                font-size: 16px;
+                                                padding: 12px 8px;
+                                                white-space: nowrap;
+                                            }
+                                            .tabs::-webkit-scrollbar {
+                                                height: 4px;
+                                            }
+                                            .tabs::-webkit-scrollbar-thumb {
+                                                background: var(--primary);
+                                                border-radius: 2px;
+                                            }
+                                            .tabs::-webkit-scrollbar-track {
+                                                background: var(--bg-card);
+                                            }
+                                        }
                                 /* Responsividade máxima para aba de configurações/admin no mobile */
                                 @media (max-width: 700px) {
                                     #config, #config .export-section, #configForm {
