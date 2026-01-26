@@ -11,6 +11,50 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
+                                                        /* Bottom navigation para mobile */
+                                                        @media (max-width: 700px) {
+                                                            .tabs, .hamburger-btn, .side-menu { display: none !important; }
+                                                            .bottom-nav {
+                                                                display: flex;
+                                                                position: fixed;
+                                                                left: 0; right: 0; bottom: 0;
+                                                                height: 64px;
+                                                                background: var(--bg-card);
+                                                                box-shadow: 0 -2px 10px var(--shadow-color);
+                                                                z-index: 1200;
+                                                                border-top-left-radius: 16px;
+                                                                border-top-right-radius: 16px;
+                                                                justify-content: space-around;
+                                                                align-items: center;
+                                                                padding: 0 2vw;
+                                                            }
+                                                            .bottom-nav-btn {
+                                                                flex: 1;
+                                                                display: flex;
+                                                                flex-direction: column;
+                                                                align-items: center;
+                                                                justify-content: center;
+                                                                background: none;
+                                                                border: none;
+                                                                color: var(--text-secondary);
+                                                                font-size: 13px;
+                                                                font-weight: 600;
+                                                                padding: 0;
+                                                                height: 100%;
+                                                                cursor: pointer;
+                                                                transition: color 0.2s;
+                                                            }
+                                                            .bottom-nav-btn.active {
+                                                                color: var(--primary);
+                                                            }
+                                                            .bottom-nav-btn .icon {
+                                                                font-size: 24px;
+                                                                margin-bottom: 2px;
+                                                            }
+                                                        }
+                                                        @media (min-width: 701px) {
+                                                            .bottom-nav { display: none !important; }
+                                                        }
                                                 /* Menu hambúrguer lateral para mobile */
                                                 @media (max-width: 700px) {
                                                     .tabs {
@@ -1086,6 +1130,15 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
+            <!-- Bottom navigation para mobile -->
+            <nav class="bottom-nav" id="bottomNav" style="display:none;">
+                <button class="bottom-nav-btn" id="navNovo" onclick="showTab('novo', event)"><span class="icon">➕</span><span>Novo</span></button>
+                <button class="bottom-nav-btn" id="navHistorico" onclick="showTab('historico', event)"><span class="icon">📖</span><span>Histórico</span></button>
+                <button class="bottom-nav-btn" id="navExportar" onclick="showTab('exportar', event)"><span class="icon">📤</span><span>Exportar</span></button>
+                <button class="bottom-nav-btn" id="navPerfil" onclick="showTab('perfil', event)"><span class="icon">👤</span><span>Perfil</span></button>
+                <button class="bottom-nav-btn" id="navAdmin" onclick="showTab('admin', event)" style="display:none;"><span class="icon">🔐</span><span>Admin</span></button>
+                <button class="bottom-nav-btn" id="navConfig" onclick="showTab('config', event)" style="display:none;"><span class="icon">⚙️</span><span>Config</span></button>
+            </nav>
         <!-- Botão hambúrguer para mobile -->
         <button class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menu" style="display:none;">☰</button>
         <!-- Menu lateral -->
@@ -1539,6 +1592,66 @@
     <div id="toast" class="toast"></div>
 
     <script>
+                                        // Exibir bottom nav apenas no mobile
+                                        function updateBottomNavVisibility() {
+                                            const nav = document.getElementById('bottomNav');
+                                            if (window.innerWidth <= 700) {
+                                                nav.style.display = 'flex';
+                                            } else {
+                                                nav.style.display = 'none';
+                                            }
+                                        }
+                                        window.addEventListener('resize', updateBottomNavVisibility);
+                                        window.addEventListener('DOMContentLoaded', updateBottomNavVisibility);
+
+                                        // Sincronizar abas admin/config no bottom nav
+                                        function mostrarAbaConfigSeAdmin(perfil) {
+                                            if (perfil && perfil.role === 'admin') {
+                                                document.getElementById('configTab').style.display = '';
+                                                document.getElementById('adminTab').style.display = '';
+                                                document.getElementById('configTabSide') && (document.getElementById('configTabSide').style.display = '');
+                                                document.getElementById('adminTabSide') && (document.getElementById('adminTabSide').style.display = '');
+                                                document.getElementById('navConfig').style.display = '';
+                                                document.getElementById('navAdmin').style.display = '';
+                                                isAdminUser = true;
+                                            } else {
+                                                document.getElementById('configTab').style.display = 'none';
+                                                document.getElementById('adminTab').style.display = 'none';
+                                                document.getElementById('configTabSide') && (document.getElementById('configTabSide').style.display = 'none');
+                                                document.getElementById('adminTabSide') && (document.getElementById('adminTabSide').style.display = 'none');
+                                                document.getElementById('navConfig').style.display = 'none';
+                                                document.getElementById('navAdmin').style.display = 'none';
+                                                isAdminUser = false;
+                                            }
+                                        }
+
+                                        // Destacar aba ativa no bottom nav
+                                        function highlightBottomNav(tab) {
+                                            if (window.innerWidth > 700) return;
+                                            const ids = ['navNovo','navHistorico','navExportar','navPerfil','navAdmin','navConfig'];
+                                            ids.forEach(id => {
+                                                const btn = document.getElementById(id);
+                                                if (btn) btn.classList.remove('active');
+                                            });
+                                            const map = {
+                                                'novo': 'navNovo',
+                                                'historico': 'navHistorico',
+                                                'exportar': 'navExportar',
+                                                'perfil': 'navPerfil',
+                                                'admin': 'navAdmin',
+                                                'config': 'navConfig'
+                                            };
+                                            if (map[tab]) {
+                                                const btn = document.getElementById(map[tab]);
+                                                if (btn) btn.classList.add('active');
+                                            }
+                                        }
+                                        // Adaptar showTab para destacar aba ativa no bottom nav
+                                        const originalShowTab2 = window.showTab;
+                                        window.showTab = function(tab, event) {
+                                            if (typeof originalShowTab2 === 'function') originalShowTab2(tab, event);
+                                            highlightBottomNav(tab);
+                                        };
                                 // Exibir botão hambúrguer apenas no mobile
                                 function updateHamburgerVisibility() {
                                     const btn = document.getElementById('hamburgerBtn');
