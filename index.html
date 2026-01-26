@@ -9,7 +9,7 @@
     <title>Diário Emocional - TCC</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="e2ee.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -547,6 +547,7 @@
             opacity: 0.8;
         }
 
+
         .footer-info {
             background: var(--bg-card);
             border-radius: 15px;
@@ -555,7 +556,8 @@
             text-align: center;
             font-size: 12px;
             color: var(--text-secondary);
-            transition: background 0.3s ease;\n        }
+            transition: background 0.3s ease;
+        }
 
         .toast {
             position: fixed;
@@ -1008,8 +1010,7 @@
                 <p>Registro para Terapia Cognitivo-Comportamental</p>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
-                <button id="btnSetPassphrase" class="tab" style="padding:8px 12px;font-size:13px;" onclick="showPassphraseModal()">🔒 Chave</button>
-                <button id="btnClearPassphrase" class="tab" style="padding:8px 12px;font-size:13px;display:none;" onclick="clearPassphrase()">🔓 Limpar</button>
+                <!-- Botões de passphrase removidos -->
             </div>
         </div>
     </div>
@@ -1020,6 +1021,7 @@
         <button class="tab" onclick="showTab('exportar', event)">📤 Exportar</button>
         <button class="tab" onclick="showTab('perfil', event)">👤 Perfil</button>
         <button class="tab" id="adminTab" onclick="showTab('admin', event)" style="display: none;">🔐 Admin</button>
+        <button class="tab" id="configTab" onclick="showTab('config', event)" style="display: none;">⚙️ Configurações</button>
     </div>
 
     <!-- TAB: NOVO REGISTRO -->
@@ -1186,6 +1188,19 @@
     </div>
 
     <!-- TAB: ADMIN -->
+        <!-- TAB: CONFIGURAÇÕES (apenas admin) -->
+        <div id="config" class="tab-content">
+            <div class="export-section">
+                <h3>⚙️ Configurações Gerais</h3>
+                <div id="configMsg" style="color: var(--success); margin-bottom: 10px; display: none;"></div>
+                <form id="configForm" onsubmit="salvarConfiguracaoSessao(event)">
+                    <label for="sessionTimeoutInput"><strong>Tempo máximo de sessão (minutos):</strong></label>
+                    <input type="number" id="sessionTimeoutInput" min="5" max="240" step="1" style="width: 120px; margin: 10px 0;" required>
+                    <button class="btn btn-primary" type="submit">Salvar</button>
+                </form>
+                <small style="color: var(--text-light);">O usuário será desconectado após esse tempo de inatividade.</small>
+            </div>
+        </div>
     <div id="admin" class="tab-content">
         <!-- Dashboard com Estatísticas -->
         <div class="export-section" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none;">
@@ -1342,6 +1357,65 @@
     <div id="toast" class="toast"></div>
 
     <script>
+                // --- Configuração de sessão (admin) ---
+                let sessionTimeout = 30 * 60 * 1000; // padrão: 30min
+                let sessionTimer;
+                let isAdminUser = false;
+
+                // Mostra a aba de configuração apenas se o usuário for admin (usando perfil do Firestore)
+                function mostrarAbaConfigSeAdmin(perfil) {
+                    if (perfil && perfil.role === 'admin') {
+                        document.getElementById('configTab').style.display = '';
+                        isAdminUser = true;
+                    } else {
+                        document.getElementById('configTab').style.display = 'none';
+                        isAdminUser = false;
+                    }
+                }
+
+                async function carregarConfiguracaoSessao() {
+                    try {
+                        const doc = await firebase.firestore().doc('config/sessao').get();
+                        if (doc.exists && doc.data().timeoutMin) {
+                            sessionTimeout = doc.data().timeoutMin * 60 * 1000;
+                            document.getElementById('sessionTimeoutInput').value = doc.data().timeoutMin;
+                        } else {
+                            document.getElementById('sessionTimeoutInput').value = 30;
+                        }
+                    } catch (e) {
+                        document.getElementById('sessionTimeoutInput').value = 30;
+                    }
+                    resetSessionTimer();
+                }
+
+                async function salvarConfiguracaoSessao(event) {
+                    event.preventDefault();
+                    const min = parseInt(document.getElementById('sessionTimeoutInput').value, 10);
+                    if (isNaN(min) || min < 5 || min > 240) return;
+                    try {
+                        await firebase.firestore().doc('config/sessao').set({ timeoutMin: min }, { merge: true });
+                        sessionTimeout = min * 60 * 1000;
+                        document.getElementById('configMsg').textContent = 'Configuração salva!';
+                        document.getElementById('configMsg').style.display = '';
+                        setTimeout(() => document.getElementById('configMsg').style.display = 'none', 2000);
+                        resetSessionTimer();
+                    } catch (e) {
+                        document.getElementById('configMsg').textContent = 'Erro ao salvar.';
+                        document.getElementById('configMsg').style.display = '';
+                    }
+                }
+
+                function resetSessionTimer() {
+                    clearTimeout(sessionTimer);
+                    sessionTimer = setTimeout(() => {
+                        alert('Sessão expirada por inatividade.');
+                        handleLogout();
+                    }, sessionTimeout);
+                }
+
+                ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt =>
+                    document.addEventListener(evt, resetSessionTimer)
+                );
         const emocoesCores = {
             'Raiva': '#E18AB8',
             'Tristeza': '#4A63A5',
@@ -1633,9 +1707,7 @@
             });
             // Tentar sincronizar no startup
             setTimeout(() => { if (navigator.onLine) sincronizarPendentes(); }, 1500);
-            // Passphrase state
-            currentPassphrase = null;
-            updatePassphraseUI();
+            // ...passphrase removido...
         }
 
         function criarGridEmocoes() {
@@ -1840,26 +1912,7 @@
             debugLog('☁️ Tentando salvar registro no Firebase...');
             (async () => {
                 try {
-                    let toSave;
-                    // Se a chave está carregada, cifrar os campos sensíveis e manter metadados em claro
-                    if (window.E2EE && currentPassphrase) {
-                        const sensitive = {
-                            situacao: registro.situacao,
-                            pensamento: registro.pensamento,
-                            comportamento: registro.comportamento,
-                            emocaoIntermediaria: registro.emocaoIntermediaria,
-                            emocaoEspecifica: registro.emocaoEspecifica
-                        };
-                        const pkg = await E2EE.encryptObject(sensitive, currentPassphrase);
-                        // manter metadados em claro para ordenação/filtragem
-                        toSave = Object.assign({}, pkg, {
-                            dataHora: registro.dataHora,
-                            emocaoCentral: registro.emocaoCentral,
-                            intensidade: registro.intensidade
-                        });
-                    } else {
-                        toSave = registro;
-                    }
+                    let toSave = registro;
 
                     const firebaseId = await salvarRegistroFirebase(toSave);
                     if (firebaseId) {
@@ -1923,52 +1976,7 @@
 
         // Armazena registros em memória (carregados do Firebase)
         let registrosEmMemoria = [];
-        // Passphrase (mantida em memória apenas)
-        let currentPassphrase = null;
-
-        function showPassphraseModal() {
-            const html = `
-                <div style="position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:9999;" id="passphraseModal">
-                  <div style="background:var(--bg-card);padding:20px;border-radius:12px;min-width:320px;box-shadow:0 10px 30px var(--shadow-color);">
-                    <h3 style="margin-bottom:8px">Chave de Criptografia</h3>
-                    <p style="margin:0 0 12px 0;color:var(--text-light);font-size:13px">Insira sua passphrase (não será salva). Usada para cifrar/decifrar registros.</p>
-                    <input id="passphraseInput" type="password" style="width:100%;padding:10px;border:1px solid var(--border-color);border-radius:8px;margin-bottom:12px;" />
-                    <div style="display:flex;gap:8px;justify-content:flex-end;">
-                      <button onclick="(function(){document.getElementById('passphraseModal').remove();})();" class="tab">Cancelar</button>
-                      <button onclick="(function(){ const v=document.getElementById('passphraseInput').value; setPassphrase(v); document.getElementById('passphraseModal').remove(); })()" class="tab" style="background:var(--primary);color:#fff;">Salvar</button>
-                    </div>
-                  </div>
-                </div>`;
-            const div = document.createElement('div');
-            div.innerHTML = html;
-            document.body.appendChild(div);
-            document.getElementById('passphraseInput').focus();
-        }
-
-        function setPassphrase(p) {
-            if (!p || p.trim().length === 0) return;
-            currentPassphrase = p;
-            updatePassphraseUI();
-            mostrarToast('🔐 Chave carregada na sessão');
-        }
-
-        function clearPassphrase() {
-            currentPassphrase = null;
-            updatePassphraseUI();
-            mostrarToast('🔓 Chave removida da sessão');
-        }
-
-        function updatePassphraseUI() {
-            const btnSet = document.getElementById('btnSetPassphrase');
-            const btnClear = document.getElementById('btnClearPassphrase');
-            if (currentPassphrase) {
-                btnSet.textContent = '🔒 Chave: carregada';
-                btnClear.style.display = 'inline-block';
-            } else {
-                btnSet.textContent = '🔒 Chave';
-                btnClear.style.display = 'none';
-            }
-        }
+        // ...funções de passphrase removidas...
 
         function getRegistros() {
             return registrosEmMemoria.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
@@ -2100,17 +2108,10 @@
                 const cor = emocoesCores[emocao] || '#667eea';
                 const emojiEmocao = emocoesHierarquia[emocao]?.emoji || '❤️';
 
-                // Desanitizar para exibição (se disponível). Para registros cifrados bloqueados, exibir marcador.
-                let situacaoExibir, pensamentoExibir, comportamentoExibir;
-                if (r.encrypted && r.locked) {
-                    situacaoExibir = '<em>🔒 Conteúdo protegido — carregue a chave para decifrar</em>';
-                    pensamentoExibir = '<em>🔒 Conteúdo protegido — carregue a chave para decifrar</em>';
-                    comportamentoExibir = '<em>🔒 Conteúdo protegido — carregue a chave para decifrar</em>';
-                } else {
-                    situacaoExibir = desanitizarTexto(r.situacao);
-                    pensamentoExibir = desanitizarTexto(r.pensamento);
-                    comportamentoExibir = desanitizarTexto(r.comportamento);
-                }
+                // Desanitizar para exibição
+                let situacaoExibir = desanitizarTexto(r.situacao);
+                let pensamentoExibir = desanitizarTexto(r.pensamento);
+                let comportamentoExibir = desanitizarTexto(r.comportamento);
 
                 return `
                     <div class="entry-card" data-id="${r.id}">
@@ -2608,6 +2609,13 @@
                             }
                         }
 
+                        // Forçar logout se status mudar para inativo
+                        if (perfil && perfil.status === 'inativo') {
+                            await auth.signOut();
+                            showError('❌ Sua conta foi desativada. Entre em contato com o administrador.');
+                            return;
+                        }
+
                         // Atualizar informações do usuário
                         const userName = document.getElementById('userName');
                         const userEmail = document.getElementById('userEmail');
@@ -2623,6 +2631,7 @@
                         if (userEmail) userEmail.textContent = user.email;
 
                         // Mostrar app imediatamente e carregar dados em background
+                        mostrarAbaConfigSeAdmin(perfil);
                         showApp();
                         carregarDadosFirebase().catch(err => console.warn('Erro ao carregar dados:', err));
                     } else {
@@ -2732,6 +2741,8 @@
         }
 
         function showApp() {
+            if (isAdminUser) carregarConfiguracaoSessao();
+            clearTimeout(sessionTimer);
             debugLog('📱 Mostrando app...');
             document.getElementById('loadingScreen').classList.add('hidden');
             document.getElementById('loginScreen').classList.add('hidden');
@@ -2793,6 +2804,16 @@
         }
 
         async function handleEmailAuth() {
+                        // Limite de tentativas de login
+                        if (isLoginMode) {
+                            const attempts = getLoginAttempts(email);
+                            const now = Date.now();
+                            if (attempts.blockedUntil && now < attempts.blockedUntil) {
+                                const min = Math.ceil((attempts.blockedUntil - now) / 60000);
+                                showError(`Muitas tentativas. Tente novamente em ${min} min.`);
+                                return;
+                            }
+                        }
             const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('passwordInput').value;
 
@@ -2834,6 +2855,9 @@
                     const result = await auth.signInWithEmailAndPassword(email, password);
                     debugLog('✅ Login realizado:', result.user.email);
 
+                    // Resetar tentativas ao logar com sucesso
+                    setLoginAttempts(email, { count: 0, lastFail: 0, blockedUntil: 0 });
+
                     // Verificar se usuário está ativo
                     const perfilDoc = await db.collection('usuarios').doc(result.user.uid).get();
                     if (perfilDoc.exists) {
@@ -2856,6 +2880,16 @@
 
                 // onAuthStateChanged vai chamar showApp() automaticamente
             } catch (error) {
+                // Limitar tentativas de login
+                if (isLoginMode) {
+                    let attempts = getLoginAttempts(email);
+                    attempts.count = (attempts.count || 0) + 1;
+                    attempts.lastFail = Date.now();
+                    if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
+                        attempts.blockedUntil = Date.now() + LOGIN_BLOCK_MINUTES * 60000;
+                    }
+                    setLoginAttempts(email, attempts);
+                }
                 console.error('❌ Erro completo:', error);
                 console.error('Código:', error.code);
                 console.error('Mensagem:', error.message);
@@ -3005,7 +3039,7 @@
         function mostrarTermos() {
             alert('TERMOS DE USO\n\n' +
                 '1. Este aplicativo é um diário pessoal para registros emocionais.\n' +
-                '2. Seus dados são privados e protegidos por criptografia.\n' +
+                '2. Seus dados são privados e armazenados apenas na sua conta.\n' +
                 '3. Apenas você tem acesso aos seus registros.\n' +
                 '4. Não compartilhamos seus dados com terceiros.\n' +
                 '5. Você pode excluir sua conta e dados a qualquer momento.\n' +
@@ -3016,7 +3050,7 @@
             alert('POLÍTICA DE PRIVACIDADE\n\n' +
                 '1. Coletamos: email, nome e dados emocionais que você registra.\n' +
                 '2. Uso: Apenas para funcionamento do aplicativo.\n' +
-                '3. Armazenamento: Firebase (Google Cloud) com criptografia.\n' +
+                '3. Armazenamento: Firebase (Google Cloud).\n' +
                 '4. Compartilhamento: Não compartilhamos com terceiros.\n' +
                 '5. Seus direitos: Acesso, correção e exclusão dos seus dados.\n' +
                 '6. Segurança: Autenticação, regras de segurança e isolamento de dados.\n' +
@@ -3816,49 +3850,18 @@
                         continue;
                     }
 
-                    // Se o registro estiver cifrado, tentar decifrar com a passphrase em memória
-                    if (data.encrypted) {
-                        const registroObj = {
-                            id: data.id || null,
-                            firebaseId: doc.id,
-                            dataHora: data.dataHora,
-                            emocaoCentral: data.emocaoCentral,
-                            intensidade: data.intensidade,
-                            encrypted: true
-                        };
-
-                        if (window.E2EE && currentPassphrase) {
-                            try {
-                                const plain = await E2EE.decryptObject(data, currentPassphrase);
-                                registroObj.situacao = sanitizarTexto(plain.situacao || '');
-                                registroObj.pensamento = sanitizarTexto(plain.pensamento || '');
-                                registroObj.comportamento = sanitizarTexto(plain.comportamento || '');
-                                registroObj.emocaoIntermediaria = plain.emocaoIntermediaria || '';
-                                registroObj.emocaoEspecifica = plain.emocaoEspecifica || '';
-                                registroObj.locked = false;
-                            } catch (err) {
-                                debugLog('⚠️ Falha ao decifrar registro', doc.id, err);
-                                registroObj.locked = true;
-                            }
-                        } else {
-                            registroObj.locked = true; // chave não disponível
-                        }
-
-                        registrosFirebase.push(registroObj);
-                    } else {
-                        registrosFirebase.push({
-                            id: data.id, // ID local original
-                            firebaseId: doc.id, // ID do documento do Firebase
-                            dataHora: data.dataHora,
-                            situacao: data.situacao,
-                            pensamento: data.pensamento,
-                            emocaoCentral: data.emocaoCentral,
-                            emocaoIntermediaria: data.emocaoIntermediaria,
-                            emocaoEspecifica: data.emocaoEspecifica,
-                            intensidade: data.intensidade,
-                            comportamento: data.comportamento
-                        });
-                    }
+                    registrosFirebase.push({
+                        id: data.id, // ID local original
+                        firebaseId: doc.id, // ID do documento do Firebase
+                        dataHora: data.dataHora,
+                        situacao: data.situacao,
+                        pensamento: data.pensamento,
+                        emocaoCentral: data.emocaoCentral,
+                        emocaoIntermediaria: data.emocaoIntermediaria,
+                        emocaoEspecifica: data.emocaoEspecifica,
+                        intensidade: data.intensidade,
+                        comportamento: data.comportamento
+                    });
                 }
 
                 // SEGURANÇA: Filtrar registros nulos (que não passaram na validação)
@@ -3944,22 +3947,8 @@
             _gravarPendentes(pendentes);
 
             // Colocar também na memória para aparecer no histórico imediatamente
-            if (registro && registro.encrypted) {
-                // armazenar representação pública (metadados) apenas
-                const meta = {
-                    localId,
-                    id: null,
-                    firebaseId: null,
-                    dataHora: registro.dataHora,
-                    emocaoCentral: registro.emocaoCentral,
-                    intensidade: registro.intensidade,
-                    encrypted: true
-                };
-                registrosEmMemoria.unshift(meta);
-            } else {
-                registro.localId = localId;
-                registrosEmMemoria.unshift(registro);
-            }
+            registro.localId = localId;
+            registrosEmMemoria.unshift(registro);
             carregarHistorico();
             return localId;
         }
