@@ -1582,8 +1582,17 @@
         function desanitizarTexto(texto) {
             if (!texto) return '';
             const div = document.createElement('div');
-            div.innerHTML = texto;
-            return div.textContent;
+            let prev = null;
+            let curr = texto + '';
+            // Decodifica entidades HTML repetidamente até estabilizar (evita double-encoded)
+            for (let i = 0; i < 5; i++) {
+                div.innerHTML = curr;
+                const decoded = div.textContent;
+                if (decoded === prev) break;
+                prev = curr;
+                curr = decoded;
+            }
+            return curr;
         }
 
         // Flag de produção - true para desabilitar logs
@@ -1608,6 +1617,13 @@
 
             // Verificar se usuário é admin e mostrar aba
             verificarAdminSilencioso();
+            // Sincronizar registros pendentes quando ficar online
+            window.addEventListener('online', () => {
+                debugLog('🔔 Online - tentando sincronizar registros pendentes');
+                sincronizarPendentes();
+            });
+            // Tentar sincronizar no startup
+            setTimeout(() => { if (navigator.onLine) sincronizarPendentes(); }, 1500);
         }
 
         function criarGridEmocoes() {
@@ -1765,6 +1781,17 @@
 
         function salvarRegistro() {
             const dataHora = document.getElementById('dataHora').value;
+            // Impedir registro com data/hora futura
+            const dataHoraDate = new Date(dataHora);
+            const agoraCheck = new Date();
+            if (isNaN(dataHoraDate.getTime())) {
+                mostrarToast('⚠️ Data/Hora inválida');
+                return;
+            }
+            if (dataHoraDate > agoraCheck) {
+                mostrarToast('⚠️ A data/hora do registro não pode ser no futuro');
+                return;
+            }
             const situacaoRaw = document.getElementById('situacao').value.trim();
             const pensamentoRaw = document.getElementById('pensamento').value.trim();
             const intensidade = parseInt(document.getElementById('intensidade').value, 10);
@@ -1797,27 +1824,33 @@
                 comportamento
             };
 
-            // Salvar APENAS no Firebase
-            debugLog('☁️ Salvando registro no Firebase...');
-            salvarRegistroFirebase(registro).then(firebaseId => {
+            // Tentar salvar no Firebase; se falhar, salvar offline e sincronizar depois
+            debugLog('☁️ Tentando salvar registro no Firebase...');
+            salvarRegistroFirebase(registro).then(async firebaseId => {
                 if (firebaseId) {
                     // Adicionar à memória local
                     registro.firebaseId = firebaseId;
                     registrosEmMemoria.push(registro);
                     debugLog('✅ Registro salvo com sucesso! Firebase ID:', firebaseId);
                     document.getElementById('syncStatus').textContent = '✓ Sincronizado';
+                    mostrarToast('✅ Registro salvo com sucesso!');
                 } else {
-                    mostrarToast('❌ Erro ao salvar no Firebase');
+                    // Salvar offline
+                    await salvarRegistroOffline(registro);
+                    mostrarToast('✅ Registro salvo offline; será sincronizado quando online');
                 }
-            }).catch(err => {
-                console.error('❌ Erro ao salvar:', err);
-                mostrarToast('❌ Erro ao salvar no Firebase');
-                document.getElementById('syncStatus').textContent = '⚠ Erro na sincronização';
-            });
 
-            mostrarToast('✅ Registro salvo com sucesso!');
-            limparFormulario();
-            setTimeout(() => showTab('historico'), 1500);
+                limparFormulario();
+                setTimeout(() => showTab('historico'), 1500);
+            }).catch(async err => {
+                console.error('❌ Erro ao salvar:', err);
+                // Salvar em pendentes locais
+                await salvarRegistroOffline(registro);
+                mostrarToast('✅ Registro salvo offline; será sincronizado quando online');
+                document.getElementById('syncStatus').textContent = '⚠ Erro na sincronização';
+                limparFormulario();
+                setTimeout(() => showTab('historico'), 1500);
+            });
         }
 
         function limparFormulario() {
@@ -2177,7 +2210,8 @@
                 doc.text('Situacao:', margemEsquerda, y);
                 y += 5;
                 doc.setFont('helvetica', 'normal');
-                const linhasSituacao = doc.splitTextToSize(reg.situacao, larguraPagina);
+                const situacaoText = desanitizarTexto(reg.situacao || '');
+                const linhasSituacao = doc.splitTextToSize(situacaoText, larguraPagina);
                 doc.text(linhasSituacao, margemEsquerda, y);
                 y += (linhasSituacao.length * 5) + 2;
 
@@ -2190,7 +2224,8 @@
                 doc.text('Pensamento Automatico:', margemEsquerda, y);
                 y += 5;
                 doc.setFont('helvetica', 'normal');
-                const linhasPensamento = doc.splitTextToSize(reg.pensamento, larguraPagina);
+                const pensamentoText = desanitizarTexto(reg.pensamento || '');
+                const linhasPensamento = doc.splitTextToSize(pensamentoText, larguraPagina);
                 doc.text(linhasPensamento, margemEsquerda, y);
                 y += (linhasPensamento.length * 5) + 2;
 
@@ -2203,9 +2238,9 @@
                 doc.text('Emocao:', margemEsquerda, y);
                 y += 5;
                 doc.setFont('helvetica', 'normal');
-                let textoEmocao = reg.emocaoCentral || 'Nao especificada';
-                if (reg.emocaoIntermediaria) textoEmocao += ' > ' + reg.emocaoIntermediaria;
-                if (reg.emocaoEspecifica) textoEmocao += ' > ' + reg.emocaoEspecifica;
+                let textoEmocao = desanitizarTexto(reg.emocaoCentral || 'Nao especificada');
+                if (reg.emocaoIntermediaria) textoEmocao += ' > ' + desanitizarTexto(reg.emocaoIntermediaria);
+                if (reg.emocaoEspecifica) textoEmocao += ' > ' + desanitizarTexto(reg.emocaoEspecifica);
                 doc.text(textoEmocao, margemEsquerda, y);
                 y += 7;
 
@@ -2225,7 +2260,8 @@
                 doc.text('Comportamento:', margemEsquerda, y);
                 y += 5;
                 doc.setFont('helvetica', 'normal');
-                const linhasComportamento = doc.splitTextToSize(reg.comportamento, larguraPagina);
+                const comportamentoText = desanitizarTexto(reg.comportamento || '');
+                const linhasComportamento = doc.splitTextToSize(comportamentoText, larguraPagina);
                 doc.text(linhasComportamento, margemEsquerda, y);
                 y += (linhasComportamento.length * 5) + 8;
 
@@ -2242,8 +2278,11 @@
                 }
             });
 
-            // Salvar PDF
-            const nomeArquivo = 'diario-emocional-' + new Date().toISOString().split('T')[0] + '.pdf';
+            // Salvar PDF com timestamp no nome (YYYYMMDD_HHMMSS)
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+            const nomeArquivo = `registro_emocao_${ts}.pdf`;
             doc.save(nomeArquivo);
             mostrarToast('PDF baixado com sucesso!');
         }
@@ -2254,7 +2293,16 @@
                 mostrarToast('⚠️ Nenhum registro selecionado');
                 return;
             }
-            const blob = new Blob([JSON.stringify(registros, null, 2)], { type: 'application/json' });
+            const exportData = registros.map(r => ({
+                ...r,
+                situacao: desanitizarTexto(r.situacao || ''),
+                pensamento: desanitizarTexto(r.pensamento || ''),
+                comportamento: desanitizarTexto(r.comportamento || ''),
+                emocaoCentral: desanitizarTexto(r.emocaoCentral || ''),
+                emocaoIntermediaria: desanitizarTexto(r.emocaoIntermediaria || ''),
+                emocaoEspecifica: desanitizarTexto(r.emocaoEspecifica || '')
+            }));
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
             baixarArquivo(blob, `diario-emocional-${new Date().toISOString().split('T')[0]}.json`);
             mostrarToast('📥 JSON baixado!');
         }
@@ -2269,18 +2317,22 @@
 
             registros.forEach(r => {
                 const data = new Date(r.dataHora);
-                let emocaoTexto = r.emocaoCentral || '';
-                if (r.emocaoIntermediaria) emocaoTexto += ' > ' + r.emocaoIntermediaria;
-                if (r.emocaoEspecifica) emocaoTexto += ' > ' + r.emocaoEspecifica;
+                let emocaoTexto = desanitizarTexto(r.emocaoCentral || '');
+                if (r.emocaoIntermediaria) emocaoTexto += ' > ' + desanitizarTexto(r.emocaoIntermediaria);
+                if (r.emocaoEspecifica) emocaoTexto += ' > ' + desanitizarTexto(r.emocaoEspecifica);
+
+                const situacao = desanitizarTexto(r.situacao || '').replace(/"/g, '""');
+                const pensamento = desanitizarTexto(r.pensamento || '').replace(/"/g, '""');
+                const comportamento = desanitizarTexto(r.comportamento || '').replace(/"/g, '""');
 
                 const linha = [
                     data.toLocaleDateString('pt-BR'),
                     data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-                    `"${r.situacao.replace(/"/g, '""')}"`,
-                    `"${r.pensamento.replace(/"/g, '""')}"`,
+                    `"${situacao}"`,
+                    `"${pensamento}"`,
                     `"${emocaoTexto}"`,
                     r.intensidade,
-                    `"${r.comportamento.replace(/"/g, '""')}"`
+                    `"${comportamento}"`
                 ].join(',');
                 csv += linha + '\n';
             });
@@ -2303,13 +2355,13 @@
                 const data = new Date(r.dataHora);
                 texto += `REGISTRO ${i + 1}\n`;
                 texto += `Data: ${data.toLocaleDateString('pt-BR')} às ${data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}\n\n`;
-                texto += `SITUAÇÃO:\n${r.situacao}\n\n`;
-                texto += `PENSAMENTO AUTOMÁTICO:\n${r.pensamento}\n\n`;
-                texto += `EMOÇÃO:\n${r.emocaoCentral || 'Não especificada'}`;
+                texto += `SITUAÇÃO:\n${desanitizarTexto(r.situacao || '')}\n\n`;
+                texto += `PENSAMENTO AUTOMÁTICO:\n${desanitizarTexto(r.pensamento || '')}\n\n`;
+                texto += `EMOÇÃO:\n${desanitizarTexto(r.emocaoCentral || 'Não especificada')}`;
                 if (r.emocaoIntermediaria) texto += ` → ${r.emocaoIntermediaria}`;
                 if (r.emocaoEspecifica) texto += ` → ${r.emocaoEspecifica}`;
                 texto += `\n\nINTENSIDADE: ${r.intensidade}/10\n\n`;
-                texto += `COMPORTAMENTO:\n${r.comportamento}\n\n`;
+                texto += `COMPORTAMENTO:\n${desanitizarTexto(r.comportamento || '')}\n\n`;
                 texto += '-'.repeat(50) + '\n\n';
             });
 
@@ -3723,6 +3775,100 @@
             } catch (error) {
                 console.error('Erro ao excluir:', error);
                 throw error;
+            }
+        }
+
+        // ---------- Offline queue and synchronization ----------
+        const PENDENTES_KEY = 'diario_pendentes_v1';
+
+        function _lerPendentes() {
+            try {
+                const raw = localStorage.getItem(PENDENTES_KEY) || '[]';
+                return JSON.parse(raw);
+            } catch (e) {
+                console.error('Erro lendo pendentes:', e);
+                return [];
+            }
+        }
+
+        function _gravarPendentes(lista) {
+            try {
+                localStorage.setItem(PENDENTES_KEY, JSON.stringify(lista));
+            } catch (e) {
+                console.error('Erro gravando pendentes:', e);
+            }
+        }
+
+        async function salvarRegistroOffline(registro) {
+            const pendentes = _lerPendentes();
+            const localId = 'local_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+            const item = {
+                localId,
+                registro,
+                criadoEm: new Date().toISOString(),
+                tentativas: 0
+            };
+            pendentes.push(item);
+            _gravarPendentes(pendentes);
+
+            // Colocar também na memória para aparecer no histórico imediatamente
+            registro.localId = localId;
+            registrosEmMemoria.unshift(registro);
+            carregarHistorico();
+            return localId;
+        }
+
+        async function sincronizarPendentes() {
+            if (!navigator.onLine) {
+                debugLog('🔌 Offline — não sincroniza pendentes agora');
+                return;
+            }
+
+            const pendentes = _lerPendentes();
+            if (!pendentes || pendentes.length === 0) {
+                debugLog('🔔 Nenhum registro pendente para sincronizar');
+                return;
+            }
+
+            debugLog(`🔔 Iniciando sincronização de ${pendentes.length} pendentes`);
+
+            const restantes = [];
+            for (const item of pendentes) {
+                try {
+                    item.tentativas = (item.tentativas || 0) + 1;
+                    const firebaseId = await salvarRegistroFirebase(item.registro);
+                    if (firebaseId) {
+                        debugLog('✅ Sincronizado localId', item.localId, '-> firebaseId', firebaseId);
+                        // Atualizar memória local: substituir localId por firebaseId
+                        const idx = registrosEmMemoria.findIndex(r => r.localId === item.localId);
+                        if (idx !== -1) {
+                            registrosEmMemoria[idx].firebaseId = firebaseId;
+                            delete registrosEmMemoria[idx].localId;
+                        }
+                    } else {
+                        debugLog('⚠️ Falha ao sincronizar, manter em pendentes:', item.localId);
+                        restantes.push(item);
+                    }
+                } catch (err) {
+                    console.error('Erro ao sincronizar item', item.localId, err);
+                    // Se muitas tentativas, manter para tentar depois
+                    restantes.push(item);
+                }
+            }
+
+            _gravarPendentes(restantes);
+            debugLog(`🔔 Sincronização finalizada. Restantes: ${restantes.length}`);
+
+            // Atualizar histórico e UI
+            carregarHistorico();
+            if (restantes.length === 0) {
+                mostrarToast('✅ Todos os registros pendentes foram sincronizados');
+                document.getElementById('syncStatus').textContent = '✓ Sincronizado';
+                document.getElementById('syncStatus').style.color = 'var(--success)';
+            } else {
+                mostrarToast(`⚠️ ${restantes.length} registros ainda não sincronizados`);
+                document.getElementById('syncStatus').textContent = '⚠ Pendentes';
+                document.getElementById('syncStatus').style.color = 'var(--danger)';
             }
         }
 
