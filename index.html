@@ -2993,6 +2993,15 @@
                         if (userEmail) userEmail.textContent = user.email;
 
                         // Mostrar app imediatamente e carregar dados em background
+                                                                        // Garante ocultação dos botões admin/config para não-admins
+                                                                        setTimeout(() => {
+                                                                            if (!perfil || perfil.role !== 'admin') {
+                                                                                var navAdmin = document.getElementById('navAdmin');
+                                                                                var navConfig = document.getElementById('navConfig');
+                                                                                if (navAdmin) navAdmin.style.display = 'none';
+                                                                                if (navConfig) navConfig.style.display = 'none';
+                                                                            }
+                                                                        }, 100);
                                                 // Fallback definitivo: força display dos botões admin/config após showApp
                                                 setTimeout(() => {
                                                     if (perfil && perfil.role === 'admin') {
