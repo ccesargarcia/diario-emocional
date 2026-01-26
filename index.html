@@ -1604,26 +1604,32 @@
                                         window.addEventListener('resize', updateBottomNavVisibility);
                                         window.addEventListener('DOMContentLoaded', updateBottomNavVisibility);
 
-                                        // Sincronizar abas admin/config no bottom nav
-                                        function mostrarAbaConfigSeAdmin(perfil) {
-                                            if (perfil && perfil.role === 'admin') {
-                                                document.getElementById('configTab').style.display = '';
-                                                document.getElementById('adminTab').style.display = '';
-                                                document.getElementById('configTabSide') && (document.getElementById('configTabSide').style.display = '');
-                                                document.getElementById('adminTabSide') && (document.getElementById('adminTabSide').style.display = '');
-                                                document.getElementById('navConfig').style.display = '';
-                                                document.getElementById('navAdmin').style.display = '';
-                                                isAdminUser = true;
-                                            } else {
-                                                document.getElementById('configTab').style.display = 'none';
-                                                document.getElementById('adminTab').style.display = 'none';
-                                                document.getElementById('configTabSide') && (document.getElementById('configTabSide').style.display = 'none');
-                                                document.getElementById('adminTabSide') && (document.getElementById('adminTabSide').style.display = 'none');
-                                                document.getElementById('navConfig').style.display = 'none';
-                                                document.getElementById('navAdmin').style.display = 'none';
-                                                isAdminUser = false;
-                                            }
-                                        }
+        // Sincronizar abas admin/config em todos os menus (tabs, lateral, bottom nav)
+        function mostrarAbaConfigSeAdmin(perfil) {
+            const configTab = document.getElementById('configTab');
+            const adminTab = document.getElementById('adminTab');
+            const configTabSide = document.getElementById('configTabSide');
+            const adminTabSide = document.getElementById('adminTabSide');
+            const navConfig = document.getElementById('navConfig');
+            const navAdmin = document.getElementById('navAdmin');
+            if (perfil && perfil.role === 'admin') {
+                if (configTab) configTab.style.display = '';
+                if (adminTab) adminTab.style.display = '';
+                if (configTabSide) configTabSide.style.display = '';
+                if (adminTabSide) adminTabSide.style.display = '';
+                if (navConfig) navConfig.style.display = '';
+                if (navAdmin) navAdmin.style.display = '';
+                isAdminUser = true;
+            } else {
+                if (configTab) configTab.style.display = 'none';
+                if (adminTab) adminTab.style.display = 'none';
+                if (configTabSide) configTabSide.style.display = 'none';
+                if (adminTabSide) adminTabSide.style.display = 'none';
+                if (navConfig) navConfig.style.display = 'none';
+                if (navAdmin) navAdmin.style.display = 'none';
+                isAdminUser = false;
+            }
+        }
 
                                         // Destacar aba ativa no bottom nav
                                         function highlightBottomNav(tab) {
@@ -2987,7 +2993,38 @@
                         if (userEmail) userEmail.textContent = user.email;
 
                         // Mostrar app imediatamente e carregar dados em background
-                        mostrarAbaConfigSeAdmin(perfil);
+                                                // Fallback definitivo: força display dos botões admin/config após showApp
+                                                setTimeout(() => {
+                                                    if (perfil && perfil.role === 'admin') {
+                                                        var navAdmin = document.getElementById('navAdmin');
+                                                        var navConfig = document.getElementById('navConfig');
+                                                        if (navAdmin) navAdmin.style.display = '';
+                                                        if (navConfig) navConfig.style.display = '';
+                                                    }
+                                                }, 800);
+                        // Garante que os elementos do menu já existem antes de mostrar abas admin/config
+                        function tryShowAdminTabs() {
+                            const navAdmin = document.getElementById('navAdmin');
+                            const navConfig = document.getElementById('navConfig');
+                            const adminTab = document.getElementById('adminTab');
+                            const configTab = document.getElementById('configTab');
+                            if (navAdmin && navConfig && adminTab && configTab) {
+                                mostrarAbaConfigSeAdmin(perfil);
+                                return true;
+                            }
+                            return false;
+                        }
+                        if (!tryShowAdminTabs()) {
+                            // Se ainda não existem, observar o DOM até aparecerem
+                            const obs = new MutationObserver(() => {
+                                if (tryShowAdminTabs()) {
+                                    obs.disconnect();
+                                }
+                            });
+                            obs.observe(document.body, { childList: true, subtree: true });
+                        }
+                        // Fallback: força exibição após showApp()
+                        setTimeout(() => { mostrarAbaConfigSeAdmin(perfil); }, 500);
                         showApp();
                         carregarDadosFirebase().catch(err => console.warn('Erro ao carregar dados:', err));
                     } else {
