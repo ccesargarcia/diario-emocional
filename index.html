@@ -9,6 +9,7 @@
     <title>Diário Emocional - TCC</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="e2ee.js"></script>
     <style>
         * {
             margin: 0;
@@ -1001,8 +1002,16 @@
 
 
     <div class="header">
-        <h1>📔 Diário Emocional</h1>
-        <p>Registro para Terapia Cognitivo-Comportamental</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div>
+                <h1>📔 Diário Emocional</h1>
+                <p>Registro para Terapia Cognitivo-Comportamental</p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button id="btnSetPassphrase" class="tab" style="padding:8px 12px;font-size:13px;" onclick="showPassphraseModal()">🔒 Chave</button>
+                <button id="btnClearPassphrase" class="tab" style="padding:8px 12px;font-size:13px;display:none;" onclick="clearPassphrase()">🔓 Limpar</button>
+            </div>
+        </div>
     </div>
 
     <div class="tabs">
@@ -1624,6 +1633,9 @@
             });
             // Tentar sincronizar no startup
             setTimeout(() => { if (navigator.onLine) sincronizarPendentes(); }, 1500);
+            // Passphrase state
+            currentPassphrase = null;
+            updatePassphraseUI();
         }
 
         function criarGridEmocoes() {
@@ -1826,31 +1838,66 @@
 
             // Tentar salvar no Firebase; se falhar, salvar offline e sincronizar depois
             debugLog('☁️ Tentando salvar registro no Firebase...');
-            salvarRegistroFirebase(registro).then(async firebaseId => {
-                if (firebaseId) {
-                    // Adicionar à memória local
-                    registro.firebaseId = firebaseId;
-                    registrosEmMemoria.push(registro);
-                    debugLog('✅ Registro salvo com sucesso! Firebase ID:', firebaseId);
-                    document.getElementById('syncStatus').textContent = '✓ Sincronizado';
-                    mostrarToast('✅ Registro salvo com sucesso!');
-                } else {
-                    // Salvar offline
+            (async () => {
+                try {
+                    let toSave;
+                    // Se a chave está carregada, cifrar os campos sensíveis e manter metadados em claro
+                    if (window.E2EE && currentPassphrase) {
+                        const sensitive = {
+                            situacao: registro.situacao,
+                            pensamento: registro.pensamento,
+                            comportamento: registro.comportamento,
+                            emocaoIntermediaria: registro.emocaoIntermediaria,
+                            emocaoEspecifica: registro.emocaoEspecifica
+                        };
+                        const pkg = await E2EE.encryptObject(sensitive, currentPassphrase);
+                        // manter metadados em claro para ordenação/filtragem
+                        toSave = Object.assign({}, pkg, {
+                            dataHora: registro.dataHora,
+                            emocaoCentral: registro.emocaoCentral,
+                            intensidade: registro.intensidade
+                        });
+                    } else {
+                        toSave = registro;
+                    }
+
+                    const firebaseId = await salvarRegistroFirebase(toSave);
+                    if (firebaseId) {
+                        registro.firebaseId = firebaseId;
+                        if (toSave.encrypted) {
+                            // armazenar representação segura na memória
+                            registrosEmMemoria.push({
+                                id: registro.id,
+                                firebaseId,
+                                dataHora: registro.dataHora,
+                                emocaoCentral: registro.emocaoCentral,
+                                intensidade: registro.intensidade,
+                                encrypted: true
+                            });
+                        } else {
+                            registrosEmMemoria.push(registro);
+                        }
+                        debugLog('✅ Registro salvo com sucesso! Firebase ID:', firebaseId);
+                        document.getElementById('syncStatus').textContent = '✓ Sincronizado';
+                        mostrarToast('✅ Registro salvo com sucesso!');
+                    } else {
+                        // Salvar offline
+                        await salvarRegistroOffline(toSave);
+                        mostrarToast('✅ Registro salvo offline; será sincronizado quando online');
+                    }
+
+                    limparFormulario();
+                    setTimeout(() => showTab('historico'), 1500);
+                } catch (err) {
+                    console.error('❌ Erro ao salvar:', err);
+                    // Salvar em pendentes locais
                     await salvarRegistroOffline(registro);
                     mostrarToast('✅ Registro salvo offline; será sincronizado quando online');
+                    document.getElementById('syncStatus').textContent = '⚠ Erro na sincronização';
+                    limparFormulario();
+                    setTimeout(() => showTab('historico'), 1500);
                 }
-
-                limparFormulario();
-                setTimeout(() => showTab('historico'), 1500);
-            }).catch(async err => {
-                console.error('❌ Erro ao salvar:', err);
-                // Salvar em pendentes locais
-                await salvarRegistroOffline(registro);
-                mostrarToast('✅ Registro salvo offline; será sincronizado quando online');
-                document.getElementById('syncStatus').textContent = '⚠ Erro na sincronização';
-                limparFormulario();
-                setTimeout(() => showTab('historico'), 1500);
-            });
+            })();
         }
 
         function limparFormulario() {
@@ -1876,6 +1923,52 @@
 
         // Armazena registros em memória (carregados do Firebase)
         let registrosEmMemoria = [];
+        // Passphrase (mantida em memória apenas)
+        let currentPassphrase = null;
+
+        function showPassphraseModal() {
+            const html = `
+                <div style="position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:9999;" id="passphraseModal">
+                  <div style="background:var(--bg-card);padding:20px;border-radius:12px;min-width:320px;box-shadow:0 10px 30px var(--shadow-color);">
+                    <h3 style="margin-bottom:8px">Chave de Criptografia</h3>
+                    <p style="margin:0 0 12px 0;color:var(--text-light);font-size:13px">Insira sua passphrase (não será salva). Usada para cifrar/decifrar registros.</p>
+                    <input id="passphraseInput" type="password" style="width:100%;padding:10px;border:1px solid var(--border-color);border-radius:8px;margin-bottom:12px;" />
+                    <div style="display:flex;gap:8px;justify-content:flex-end;">
+                      <button onclick="(function(){document.getElementById('passphraseModal').remove();})();" class="tab">Cancelar</button>
+                      <button onclick="(function(){ const v=document.getElementById('passphraseInput').value; setPassphrase(v); document.getElementById('passphraseModal').remove(); })()" class="tab" style="background:var(--primary);color:#fff;">Salvar</button>
+                    </div>
+                  </div>
+                </div>`;
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            document.body.appendChild(div);
+            document.getElementById('passphraseInput').focus();
+        }
+
+        function setPassphrase(p) {
+            if (!p || p.trim().length === 0) return;
+            currentPassphrase = p;
+            updatePassphraseUI();
+            mostrarToast('🔐 Chave carregada na sessão');
+        }
+
+        function clearPassphrase() {
+            currentPassphrase = null;
+            updatePassphraseUI();
+            mostrarToast('🔓 Chave removida da sessão');
+        }
+
+        function updatePassphraseUI() {
+            const btnSet = document.getElementById('btnSetPassphrase');
+            const btnClear = document.getElementById('btnClearPassphrase');
+            if (currentPassphrase) {
+                btnSet.textContent = '🔒 Chave: carregada';
+                btnClear.style.display = 'inline-block';
+            } else {
+                btnSet.textContent = '🔒 Chave';
+                btnClear.style.display = 'none';
+            }
+        }
 
         function getRegistros() {
             return registrosEmMemoria.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
@@ -2007,10 +2100,17 @@
                 const cor = emocoesCores[emocao] || '#667eea';
                 const emojiEmocao = emocoesHierarquia[emocao]?.emoji || '❤️';
 
-                // Desanitizar para exibição
-                const situacaoExibir = desanitizarTexto(r.situacao);
-                const pensamentoExibir = desanitizarTexto(r.pensamento);
-                const comportamentoExibir = desanitizarTexto(r.comportamento);
+                // Desanitizar para exibição (se disponível). Para registros cifrados bloqueados, exibir marcador.
+                let situacaoExibir, pensamentoExibir, comportamentoExibir;
+                if (r.encrypted && r.locked) {
+                    situacaoExibir = '<em>🔒 Conteúdo protegido — carregue a chave para decifrar</em>';
+                    pensamentoExibir = '<em>🔒 Conteúdo protegido — carregue a chave para decifrar</em>';
+                    comportamentoExibir = '<em>🔒 Conteúdo protegido — carregue a chave para decifrar</em>';
+                } else {
+                    situacaoExibir = desanitizarTexto(r.situacao);
+                    pensamentoExibir = desanitizarTexto(r.pensamento);
+                    comportamentoExibir = desanitizarTexto(r.comportamento);
+                }
 
                 return `
                     <div class="entry-card" data-id="${r.id}">
@@ -3706,28 +3806,60 @@
                     .orderBy('criadoEm', 'desc')
                     .get();
 
-                const registrosFirebase = snapshot.docs.map(doc => {
+                const registrosFirebase = [];
+                for (const doc of snapshot.docs) {
                     const data = doc.data();
 
                     // SEGURANÇA: Validar proprietário
                     if (data.proprietario && data.proprietario !== currentUser.uid) {
                         console.error('❌ SEGURANÇA: Registro não pertence ao usuário atual');
-                        return null;
+                        continue;
                     }
 
-                    return {
-                        id: data.id, // ID local original
-                        firebaseId: doc.id, // ID do documento do Firebase
-                        dataHora: data.dataHora,
-                        situacao: data.situacao,
-                        pensamento: data.pensamento,
-                        emocaoCentral: data.emocaoCentral,
-                        emocaoIntermediaria: data.emocaoIntermediaria,
-                        emocaoEspecifica: data.emocaoEspecifica,
-                        intensidade: data.intensidade,
-                        comportamento: data.comportamento
-                    };
-                });
+                    // Se o registro estiver cifrado, tentar decifrar com a passphrase em memória
+                    if (data.encrypted) {
+                        const registroObj = {
+                            id: data.id || null,
+                            firebaseId: doc.id,
+                            dataHora: data.dataHora,
+                            emocaoCentral: data.emocaoCentral,
+                            intensidade: data.intensidade,
+                            encrypted: true
+                        };
+
+                        if (window.E2EE && currentPassphrase) {
+                            try {
+                                const plain = await E2EE.decryptObject(data, currentPassphrase);
+                                registroObj.situacao = sanitizarTexto(plain.situacao || '');
+                                registroObj.pensamento = sanitizarTexto(plain.pensamento || '');
+                                registroObj.comportamento = sanitizarTexto(plain.comportamento || '');
+                                registroObj.emocaoIntermediaria = plain.emocaoIntermediaria || '';
+                                registroObj.emocaoEspecifica = plain.emocaoEspecifica || '';
+                                registroObj.locked = false;
+                            } catch (err) {
+                                debugLog('⚠️ Falha ao decifrar registro', doc.id, err);
+                                registroObj.locked = true;
+                            }
+                        } else {
+                            registroObj.locked = true; // chave não disponível
+                        }
+
+                        registrosFirebase.push(registroObj);
+                    } else {
+                        registrosFirebase.push({
+                            id: data.id, // ID local original
+                            firebaseId: doc.id, // ID do documento do Firebase
+                            dataHora: data.dataHora,
+                            situacao: data.situacao,
+                            pensamento: data.pensamento,
+                            emocaoCentral: data.emocaoCentral,
+                            emocaoIntermediaria: data.emocaoIntermediaria,
+                            emocaoEspecifica: data.emocaoEspecifica,
+                            intensidade: data.intensidade,
+                            comportamento: data.comportamento
+                        });
+                    }
+                }
 
                 // SEGURANÇA: Filtrar registros nulos (que não passaram na validação)
                 const registrosValidos = registrosFirebase.filter(r => r !== null);
@@ -3812,8 +3944,22 @@
             _gravarPendentes(pendentes);
 
             // Colocar também na memória para aparecer no histórico imediatamente
-            registro.localId = localId;
-            registrosEmMemoria.unshift(registro);
+            if (registro && registro.encrypted) {
+                // armazenar representação pública (metadados) apenas
+                const meta = {
+                    localId,
+                    id: null,
+                    firebaseId: null,
+                    dataHora: registro.dataHora,
+                    emocaoCentral: registro.emocaoCentral,
+                    intensidade: registro.intensidade,
+                    encrypted: true
+                };
+                registrosEmMemoria.unshift(meta);
+            } else {
+                registro.localId = localId;
+                registrosEmMemoria.unshift(registro);
+            }
             carregarHistorico();
             return localId;
         }
