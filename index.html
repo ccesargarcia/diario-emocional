@@ -1615,15 +1615,6 @@
                 let isAdminUser = false;
 
                 // Mostra a aba de configuração apenas se o usuário for admin (usando perfil do Firestore)
-                function mostrarAbaConfigSeAdmin(perfil) {
-                    if (perfil && perfil.role === 'admin') {
-                        document.getElementById('configTab').style.display = '';
-                        isAdminUser = true;
-                    } else {
-                        document.getElementById('configTab').style.display = 'none';
-                        isAdminUser = false;
-                    }
-                }
 
                 async function carregarConfiguracaoSessao() {
                     try {
