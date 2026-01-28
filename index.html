@@ -389,7 +389,6 @@
             border-bottom: 3px solid transparent;
             border-radius: 10px 10px 0 0;
         }
-        }
 
         .tab.active {
             color: var(--primary);
@@ -1325,6 +1324,7 @@
             <div class="user-details">
                 <div class="user-name" id="userName">Usuário</div>
                 <div class="user-email" id="userEmail">email@exemplo.com</div>
+                <div class="user-role" id="userRole" style="font-size:13px;color:var(--text-secondary);">Perfil: —</div>
                 <div class="sync-status" id="syncStatus">✓ Sincronizado</div>
             </div>
         </div>
@@ -1397,6 +1397,22 @@
 
     <!-- TAB: HISTÓRICO -->
     <div id="historico" class="tab-content">
+        <div id="headerSelecaoHistorico" style="margin-bottom: 12px; padding: 10px; background: var(--background-secondary); border-radius: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div style="display:flex; gap:8px; align-items:center;">
+                <label style="font-weight:600; margin-right:6px;">Filtro:</label>
+                <select id="filtroPaciente" onchange="(function(v){try{localStorage.setItem('filtroPaciente', v.value);}catch(e){};carregarHistorico()})(this)" style="padding:6px; max-width:220px;"></select>
+                <select id="filtroEmocao" onchange="carregarHistorico()" style="padding:6px;"></select>
+                <select id="filtroMes" onchange="carregarHistorico()" style="padding:6px;"></select>
+                <select id="filtroDia" onchange="carregarHistorico()" style="padding:6px;"></select>
+                <select id="filtroAno" onchange="carregarHistorico()" style="padding:6px;"></select>
+                <input id="filtroTexto" placeholder="Buscar texto..." oninput="carregarHistorico()" style="padding:6px; min-width:180px;" />
+            </div>
+            <div style="margin-left: auto; display:flex; gap:8px; align-items:center;">
+                <button class="btn btn-secondary" onclick="selecionarTodos()" style="padding: 5px 12px; font-size: 13px;">✅ Todos</button>
+                <button class="btn btn-secondary" onclick="deselecionarTodos()" style="padding: 5px 12px; font-size: 13px;">❌ Nenhum</button>
+                <span style="color: var(--text-secondary); font-size: 13px;" id="contadorSelecionados"></span>
+            </div>
+        </div>
         <div class="entries-list" id="entriesList"></div>
     </div>
 
@@ -1448,6 +1464,10 @@
                     <strong>Email:</strong>
                     <p id="profileEmail">Carregando...</p>
                     <small style="color: var(--text-secondary); font-size: 11px;">O email não pode ser alterado</small>
+                </div>
+                <div class="profile-field">
+                    <strong>Perfil:</strong>
+                    <p id="profileRole">Carregando...</p>
                 </div>
                 <div class="profile-field">
                     <strong>Data de Nascimento:</strong>
@@ -1600,10 +1620,11 @@
                 <label><strong>Permissão: *</strong></label>
                 <select id="novoRole">
                     <option value="user">Usuário</option>
+                    <option value="psicologo">Psicólogo</option>
                     <option value="admin">Administrador</option>
                 </select>
                 <small style="color: var(--text-secondary); font-size: 11px; display: block; margin-top: 5px;">
-                    Administradores podem gerenciar todos os usuários
+                    Administradores podem gerenciar todos os usuários. Psicólogos podem acessar registros dos pacientes.
                 </small>
             </div>
             <div class="btn-group">
@@ -1645,10 +1666,11 @@
                 <label><strong>Permissão: *</strong></label>
                 <select id="editarRole">
                     <option value="user">Usuário</option>
+                    <option value="psicologo">Psicólogo</option>
                     <option value="admin">Administrador</option>
                 </select>
                 <small style="color: var(--text-secondary); font-size: 11px; display: block; margin-top: 5px;">
-                    Administradores podem gerenciar todos os usuários
+                    Administradores podem gerenciar todos os usuários. Psicólogos podem acessar registros dos pacientes.
                 </small>
             </div>
             <div class="form-group" style="margin-bottom: 15px; text-align: left;">
@@ -2447,8 +2469,15 @@
         let registrosEmMemoria = [];
         // ...funções de passphrase removidas...
 
+        // Retorna todos os registros se for psicólogo/admin, ou só os próprios se for usuário
         function getRegistros() {
-            return registrosEmMemoria.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+            if (window.perfilAtual && (window.perfilAtual.role === 'psicologo' || window.perfilAtual.role === 'admin')) {
+                return registrosEmMemoria.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+            } else if (window.perfilAtual && window.perfilAtual.role === 'user') {
+                return registrosEmMemoria.filter(r => r.uid === currentUser.uid).sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+            } else {
+                return registrosEmMemoria.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+            }
         }
 
         function getRegistrosSelecionados() {
@@ -2460,8 +2489,50 @@
         }
 
         function carregarHistorico() {
-            const registros = getRegistros().sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+
+            let registros = getRegistros().sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
             const lista = document.getElementById('entriesList');
+            // Não criar/remover header dinamicamente aqui — o header de filtros existe no HTML.
+            // Popular e aplicar filtro por paciente (apenas para psicólogo/admin)
+            try {
+                const filtroPacienteElem = document.getElementById('filtroPaciente');
+                const storedFiltroPaciente = localStorage.getItem('filtroPaciente') || ((typeof currentUser !== 'undefined' && currentUser && currentUser.uid) ? currentUser.uid : '');
+                if (filtroPacienteElem) {
+                    if (window.perfilAtual && (window.perfilAtual.role === 'psicologo' || window.perfilAtual.role === 'admin')) {
+                        // lista de pacientes (UIDs) a partir dos registros disponíveis
+                        const pacientesUnicos = Array.from(new Set(registros.map(r => r.uid))).filter(Boolean);
+                        if (!window.pacientesNomes) window.pacientesNomes = {};
+                        const esc = s => (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+                        const pacienteOptions = ['<option value="">Todos os pacientes</option>']
+                            .concat(pacientesUnicos.map(uid => {
+                                const nome = window.pacientesNomes[uid] || uid;
+                                return `<option value="${uid}" ${uid===storedFiltroPaciente? 'selected' : ''}>${esc(nome)}</option>`;
+                            })).join('');
+                        filtroPacienteElem.innerHTML = pacienteOptions;
+                        try { if (storedFiltroPaciente) filtroPacienteElem.value = storedFiltroPaciente; } catch(e) { /* ignore */ }
+                        // aplicar filtro seleção
+                        const filtroPacienteAtual = (filtroPacienteElem && filtroPacienteElem.value) || storedFiltroPaciente || '';
+                        if (filtroPacienteAtual) registros = registros.filter(r => r.uid === filtroPacienteAtual);
+                        // tentar resolver nomes ausentes assincronamente
+                        pacientesUnicos.forEach(async uid => {
+                            if (!window.pacientesNomes[uid]) {
+                                try {
+                                    const doc = await db.collection('usuarios').doc(uid).get();
+                                    if (doc.exists) {
+                                        window.pacientesNomes[uid] = doc.data().nomeCompleto || doc.data().nome || uid;
+                                        // atualizar opção se ainda presente
+                                        const opt = filtroPacienteElem.querySelector(`option[value="${uid}"]`);
+                                        if (opt) opt.textContent = window.pacientesNomes[uid];
+                                    }
+                                } catch (e) { /* ignore */ }
+                            }
+                        });
+                    } else {
+                        // esconder select para usuários comuns
+                        filtroPacienteElem.style.display = 'none';
+                    }
+                }
+            } catch (e) { console.warn('Erro ao popular filtroPaciente', e); }
 
             if (registros.length === 0) {
                 lista.innerHTML = `
@@ -2472,7 +2543,6 @@
                 `;
                 return;
             }
-
 
             // Ler valores atuais dos filtros (preservar seleção entre renderizações)
             const storedFiltroEmocao = localStorage.getItem('filtroEmocao') || '';
@@ -2500,32 +2570,21 @@
             const diaOptions = ['<option value="">Todos</option>'].concat(diasUnicos.map(d => `<option value="${d}" ${d.toString()===filtroDiaAtual? 'selected': ''}>${d.toString().padStart(2,'0')}</option>`)).join('');
             const anoOptions = ['<option value="">Todos</option>'].concat(anosUnicos.map(y => `<option value="${y}" ${y.toString()===filtroAnoAtual? 'selected': ''}>${y}</option>`)).join('');
 
-            // Barra de filtros + seleção
-            const headerSelecao = `
-                <div style="margin-bottom: 12px; padding: 10px; background: var(--background-secondary); border-radius: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <label style="font-weight:600;">Filtro:</label>
-                        <select id="filtroEmocao" onchange="carregarHistorico()" style="padding:6px;">
-                            ${emocaoOptions}
-                        </select>
-                        <select id="filtroMes" onchange="carregarHistorico()" style="padding:6px;">
-                            ${mesOptions}
-                        </select>
-                        <select id="filtroDia" onchange="carregarHistorico()" style="padding:6px;">
-                            ${diaOptions}
-                        </select>
-                        <select id="filtroAno" onchange="carregarHistorico()" style="padding:6px;">
-                            ${anoOptions}
-                        </select>
-                        <input id="filtroTexto" placeholder="Buscar texto..." oninput="carregarHistorico()" style="padding:6px; min-width:180px;" value="${escapeHtml(filtroTextoAtual)}" />
-                    </div>
-                    <div style="margin-left: auto; display:flex; gap:8px; align-items:center;">
-                        <button class="btn btn-secondary" onclick="selecionarTodos()" style="padding: 5px 12px; font-size: 13px;">✅ Todos</button>
-                        <button class="btn btn-secondary" onclick="deselecionarTodos()" style="padding: 5px 12px; font-size: 13px;">❌ Nenhum</button>
-                        <span style="color: var(--text-secondary); font-size: 13px;" id="contadorSelecionados"></span>
-                    </div>
-                </div>
-            `;
+            // Popular os selects/inputs do header existente (se estiver presente no DOM)
+            try {
+                const elEmocao = document.getElementById('filtroEmocao');
+                const elMes = document.getElementById('filtroMes');
+                const elDia = document.getElementById('filtroDia');
+                const elAno = document.getElementById('filtroAno');
+                const elTexto = document.getElementById('filtroTexto');
+                if (elEmocao) elEmocao.innerHTML = emocaoOptions;
+                if (elMes) elMes.innerHTML = mesOptions;
+                if (elDia) elDia.innerHTML = diaOptions;
+                if (elAno) elAno.innerHTML = anoOptions;
+                if (elTexto) elTexto.value = filtroTextoAtual || '';
+            } catch (e) {
+                console.warn('Erro ao popular filtros:', e);
+            }
 
             // Aplicar filtros selecionados
             const filtroEmocao = filtroEmocaoAtual || '';
@@ -2568,7 +2627,7 @@
                 // Ignorar falhas de storage em ambientes restritos
             }
 
-            lista.innerHTML = headerSelecao + registrosFiltrados.map(r => {
+            lista.innerHTML = registrosFiltrados.map(r => {
                 const data = new Date(r.dataHora);
                 const dataFormatada = data.toLocaleDateString('pt-BR');
                 const horaFormatada = data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
@@ -2582,12 +2641,14 @@
                 let pensamentoExibir = desanitizarTexto(r.pensamento);
                 let comportamentoExibir = desanitizarTexto(r.comportamento);
 
+                const pacienteNome = (window.pacientesNomes && r.uid && window.pacientesNomes[r.uid]) ? window.pacientesNomes[r.uid] : (r.uid || 'Desconhecido');
+                const mostrarPaciente = (window.perfilAtual && (window.perfilAtual.role === 'psicologo' || window.perfilAtual.role === 'admin')) && (r.uid && r.uid !== (currentUser && currentUser.uid));
                 return `
                     <div class="entry-card" data-id="${r.id}">
                         <div class="entry-header">
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <input type="checkbox" class="registro-checkbox" data-id="${r.id}" checked style="width: 20px; height: 20px; cursor: pointer;">
-                                <div class="entry-date">📅 ${dataFormatada} às ${horaFormatada}</div>
+                                <div class="entry-date">📅 ${dataFormatada} às ${horaFormatada}${mostrarPaciente ? ` <a href="#" onclick="mostrarPerfilPaciente('${r.uid}'); return false;" style="text-decoration:none;color:inherit;font-weight:700;margin-left:6px;">— ${escapeHtml(pacienteNome)}</a>` : ''}</div>
                             </div>
                             <div class="entry-actions">
                                 <button class="icon-btn" onclick="deletarRegistro(${r.id})">🗑️</button>
@@ -3046,6 +3107,7 @@
 
                         // Carregar perfil do usuário
                         let perfil = await carregarPerfilUsuario(user.uid);
+                        window.perfilAtual = perfil;
 
                         // Se o perfil não existir, criar um perfil básico
                         if (!perfil) {
@@ -3062,6 +3124,7 @@
                             try {
                                 await db.collection('usuarios').doc(user.uid).set(perfilBasico);
                                 perfil = perfilBasico;
+                                window.perfilAtual = perfil;
                                 debugLog('✅ Perfil básico criado');
                             } catch (error) {
                                 console.error('❌ Erro ao criar perfil básico:', error);
@@ -3073,6 +3136,8 @@
                                     ultimaAtividade: firebase.firestore.FieldValue.serverTimestamp()
                                 });
                                 debugLog('✅ Última atividade atualizada');
+                                // Garantir que o perfil carregado esteja disponível globalmente
+                                window.perfilAtual = perfil;
                             } catch (error) {
                                 console.error('⚠️ Erro ao atualizar última atividade:', error);
                             }
@@ -3208,6 +3273,33 @@
             document.getElementById('greetingMessage').textContent = `${saudacao}, ${nomeUsuario}!`;
         }
 
+        // Atualizar o badge/label de role no header e no perfil
+        async function atualizarUserHeader() {
+            try {
+                const userRoleEl = document.getElementById('userRole');
+                const profileRoleEl = document.getElementById('profileRole');
+                const roleLabel = (r) => {
+                    if (!r) return 'Usuário';
+                    if (r === 'admin') return 'Administrador';
+                    if (r === 'psicologo' || r === 'psicólogo') return 'Psicólogo';
+                    return 'Usuário';
+                };
+
+                let role = (window.perfilAtual && window.perfilAtual.role) ? window.perfilAtual.role : null;
+                if (!role && currentUser) {
+                    const perfil = await carregarPerfilUsuario(currentUser.uid);
+                    if (perfil) {
+                        role = perfil.role;
+                        window.perfilAtual = perfil;
+                    }
+                }
+                if (userRoleEl) userRoleEl.textContent = `Perfil: ${roleLabel(role)}`;
+                if (profileRoleEl) profileRoleEl.textContent = roleLabel(role);
+            } catch (e) {
+                console.warn('Erro ao atualizar header de usuário:', e);
+            }
+        }
+
         // Atualizar data e hora em tempo real
         function atualizarDataHora() {
             const atualizar = () => {
@@ -3270,8 +3362,7 @@
             // IMPORTANTE: Esconder aba admin por padrão (só mostra se for admin)
             document.getElementById('adminTab').style.display = 'none';
 
-            // Limpar dados de sessão anterior
-            window.perfilAtual = null;
+            // Não limpar `window.perfilAtual` aqui; manter perfil carregado na autenticação
 
             // Carregar tema preferido
             loadTheme();
@@ -3280,6 +3371,8 @@
             inicializarApp();
             atualizarSaudacao();
             atualizarDataHora();
+            // Atualizar exibição do role no header/perfil
+            atualizarUserHeader();
             debugLog('✅ App inicializado!');
         }
 
@@ -3659,6 +3752,9 @@
                     email: currentUser.email
                 };
 
+                // Atualizar header/profile com role
+                atualizarUserHeader();
+
                 debugLog('✅ Perfil carregado para usuário:', currentUser.email, 'UID:', currentUser.uid);
             } catch (error) {
                 console.error('❌ Erro ao carregar perfil:', error);
@@ -3712,6 +3808,50 @@
             document.getElementById('btnEditProfile').style.display = 'none';
             document.getElementById('btnCancelEdit').style.display = 'inline-block';
             document.getElementById('btnSaveProfile').style.display = 'inline-block';
+        }
+
+        // Mostrar perfil de outro paciente (apenas visualização)
+        async function mostrarPerfilPaciente(uid) {
+            try {
+                const perfil = await carregarPerfilUsuario(uid);
+                if (!perfil) {
+                    mostrarToast('⚠️ Perfil não encontrado');
+                    return;
+                }
+                // Popular visualização do perfil com dados do paciente
+                document.getElementById('profileName').textContent = perfil.nomeCompleto || perfil.nome || 'Não informado';
+                document.getElementById('profileEmail').textContent = perfil.email || 'Não informado';
+                if (perfil.dataNascimento) {
+                    const [ano, mes, dia] = perfil.dataNascimento.split('-');
+                    const data = new Date(ano, mes - 1, dia);
+                    document.getElementById('profileBirthdate').textContent = data.toLocaleDateString('pt-BR');
+                } else {
+                    document.getElementById('profileBirthdate').textContent = 'Não informado';
+                }
+                const generos = {
+                    'masculino': 'Masculino', 'feminino': 'Feminino', 'outro': 'Outro', 'prefiro-nao-dizer': 'Prefiro não dizer'
+                };
+                document.getElementById('profileGender').textContent = generos[perfil.genero] || 'Não informado';
+                document.getElementById('profileSince').textContent = perfil.criadoEm ? (perfil.criadoEm.toDate().toLocaleDateString('pt-BR')) : 'Não disponível';
+
+                // Definir perfilVisualizado (não sobrescrever perfilAtual do usuário logado)
+                window.perfilVisualizado = { ...perfil, uid };
+                // Ocultar botões de edição quando visualizando outro usuário
+                const btnEdit = document.getElementById('btnEditProfile');
+                if (btnEdit) btnEdit.style.display = 'none';
+
+                // Atualizar campo de role no perfil visualizado
+                const profileRoleEl = document.getElementById('profileRole');
+                if (profileRoleEl) profileRoleEl.textContent = perfil.role ? (perfil.role === 'admin' ? 'Administrador' : (perfil.role === 'psicologo' ? 'Psicólogo' : 'Usuário')) : 'Usuário';
+
+                // Mostrar aba de perfil em modo visualização
+                document.getElementById('profileViewMode').style.display = 'block';
+                document.getElementById('profileEditMode').style.display = 'none';
+                showTab('perfil');
+            } catch (e) {
+                console.error('Erro ao mostrar perfil do paciente', e);
+                mostrarToast('❌ Erro ao carregar perfil');
+            }
         }
 
         // Cancelar edição do perfil
@@ -4357,9 +4497,66 @@
                 return;
             }
 
+            // Se for psicólogo ou admin, carregar todos os registros de todos os usuários
+            if (window.perfilAtual && (window.perfilAtual.role === 'psicologo' || window.perfilAtual.role === 'admin')) {
+                try {
+                    debugLog('📥 Carregando TODOS os registros de TODOS os usuários (psicólogo/admin)...');
+                    const usuariosSnapshot = await db.collection('usuarios').get();
+                    const registrosFirebase = [];
+                    for (const usuarioDoc of usuariosSnapshot.docs) {
+                        const usuarioId = usuarioDoc.id;
+                        // Cache do nome do paciente para exibição no histórico
+                        if (!window.pacientesNomes) window.pacientesNomes = {};
+                        try {
+                            const ud = usuarioDoc.data();
+                            window.pacientesNomes[usuarioId] = ud?.nomeCompleto || ud?.nome || ud?.email || usuarioId;
+                        } catch (e) {
+                            window.pacientesNomes[usuarioId] = usuarioId;
+                        }
+                        const registrosSnapshot = await db.collection('usuarios').doc(usuarioId).collection('registros').get();
+                        for (const doc of registrosSnapshot.docs) {
+                            const data = doc.data();
+                            if (!data) continue;
+                            registrosFirebase.push({
+                                id: data.id,
+                                firebaseId: doc.id,
+                                dataHora: data.dataHora,
+                                situacao: data.situacao,
+                                pensamento: data.pensamento,
+                                emocaoCentral: data.emocaoCentral,
+                                emocaoIntermediaria: data.emocaoIntermediaria,
+                                emocaoEspecifica: data.emocaoEspecifica,
+                                intensidade: data.intensidade,
+                                comportamento: data.comportamento,
+                                uid: usuarioId // Importante para filtrar por usuário se necessário
+                            });
+                        }
+                    }
+                    const registrosValidos = registrosFirebase.filter(r => r !== null);
+                    debugLog(`✅ ${registrosValidos.length} registros carregados de todos os usuários`);
+                    registrosEmMemoria = registrosValidos;
+                    if (document.getElementById('historico').classList.contains('active')) {
+                        carregarHistorico();
+                    }
+                    atualizarEstatisticas();
+                    document.getElementById('syncStatus').textContent = '✓ Sincronizado';
+                } catch (error) {
+                        console.error('❌ Erro ao carregar todos os registros:', error);
+                        // Informação adicional para debug
+                        console.error('Firestore error code:', error && error.code, 'message:', error && error.message);
+                        document.getElementById('syncStatus').textContent = '⚠ Erro ao sincronizar';
+                        if (error && (error.code === 'permission-denied' || (error.message && error.message.includes('Missing or insufficient permissions')))) {
+                            mostrarToast('❌ Permissão negada ao carregar registros. Verifique as regras do Firestore (deploy das regras).');
+                        } else {
+                            mostrarToast('❌ Erro ao carregar registros: ' + (error && error.message || 'desconhecido'));
+                        }
+                }
+                return;
+            }
+
+            // Usuário comum: carregar apenas seus próprios registros
             try {
                 debugLog('📥 Carregando dados do Firebase...');
-                // SEGURANÇA: Buscar apenas dados do usuário autenticado
                 const snapshot = await db.collection('usuarios').doc(currentUser.uid)
                     .collection('registros')
                     .orderBy('criadoEm', 'desc')
@@ -4368,16 +4565,13 @@
                 const registrosFirebase = [];
                 for (const doc of snapshot.docs) {
                     const data = doc.data();
-
-                    // SEGURANÇA: Validar proprietário
                     if (data.proprietario && data.proprietario !== currentUser.uid) {
                         console.error('❌ SEGURANÇA: Registro não pertence ao usuário atual');
                         continue;
                     }
-
                     registrosFirebase.push({
-                        id: data.id, // ID local original
-                        firebaseId: doc.id, // ID do documento do Firebase
+                        id: data.id,
+                        firebaseId: doc.id,
                         dataHora: data.dataHora,
                         situacao: data.situacao,
                         pensamento: data.pensamento,
@@ -4385,26 +4579,17 @@
                         emocaoIntermediaria: data.emocaoIntermediaria,
                         emocaoEspecifica: data.emocaoEspecifica,
                         intensidade: data.intensidade,
-                        comportamento: data.comportamento
+                        comportamento: data.comportamento,
+                        uid: currentUser.uid
                     });
                 }
-
-                // SEGURANÇA: Filtrar registros nulos (que não passaram na validação)
                 const registrosValidos = registrosFirebase.filter(r => r !== null);
-
                 debugLog(`✅ ${registrosValidos.length} registros carregados do Firebase`);
-
-                // Salvar na memória
                 registrosEmMemoria = registrosValidos;
-
-                // Atualizar histórico se estiver na aba
                 if (document.getElementById('historico').classList.contains('active')) {
                     carregarHistorico();
                 }
-
-                // Atualizar estatísticas
                 atualizarEstatisticas();
-
                 document.getElementById('syncStatus').textContent = '✓ Sincronizado';
             } catch (error) {
                 console.error('❌ Erro ao carregar dados do Firebase:', error);
