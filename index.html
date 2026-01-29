@@ -2747,7 +2747,13 @@
         }
 
         function atualizarEstatisticas() {
-            const registros = getRegistros();
+            let registros = getRegistros();
+            try {
+                const filtroPacienteElem = document.getElementById('filtroPaciente');
+                const storedFiltroPaciente = localStorage.getItem('filtroPaciente') || '';
+                const filtroPacienteAtual = (filtroPacienteElem && filtroPacienteElem.value) || storedFiltroPaciente || '';
+                if (filtroPacienteAtual) registros = registros.filter(r => r.uid === filtroPacienteAtual);
+            } catch (e) { /* ignore and fall back to full list */ }
             const total = registros.length;
 
             let somaIntensidade = 0;
