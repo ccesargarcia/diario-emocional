@@ -1295,7 +1295,8 @@
             <nav class="bottom-nav" id="bottomNav" style="display:none;">
                 <button class="bottom-nav-btn" id="navNovo" onclick="showTab('novo', event)"><span class="material-icons">add_circle</span><span>Novo</span></button>
                 <button class="bottom-nav-btn" id="navHistorico" onclick="showTab('historico', event)"><span class="material-icons">history</span><span>Histórico</span></button>
-                <button class="bottom-nav-btn" id="navAnsiedade" onclick="showTab('ansiedade', event)"><span class="material-icons">psychology</span><span>Ansiedade</span></button>
+                <button class="bottom-nav-btn" id="navTO" onclick="showTab('to', event)"><span class="material-icons">psychology</span><span>TO</span></button>
+                <button class="bottom-nav-btn" id="navAnsiedade" onclick="showTab('ansiedade', event)"><span class="material-icons">assessment</span><span>Ansiedade</span></button>
                 <button class="bottom-nav-btn" id="navExportar" onclick="showTab('exportar', event)"><span class="material-icons">file_upload</span><span>Exportar</span></button>
                 <button class="bottom-nav-btn" id="navPerfil" onclick="showTab('perfil', event)"><span class="material-icons">person</span><span>Perfil</span></button>
                 <button class="bottom-nav-btn" id="navAdmin" onclick="showTab('admin', event)" style="display:none;visibility:hidden;"><span class="material-icons">admin_panel_settings</span><span>Admin</span></button>
@@ -1308,6 +1309,7 @@
             <button class="close-btn" id="closeMenuBtn" aria-label="Fechar menu">×</button>
             <button class="tab" onclick="showTab('novo', event)">➕ Novo</button>
             <button class="tab" onclick="showTab('historico', event)">📖 Histórico</button>
+            <button class="tab" onclick="showTab('to', event)">🧠 TO - Crises</button>
             <button class="tab" onclick="showTab('exportar', event)">📤 Exportar</button>
             <button class="tab" onclick="showTab('perfil', event)">👤 Perfil</button>
             <button class="tab" onclick="showTab('ansiedade', event)">📝 Escala Ansiedade</button>
@@ -1417,6 +1419,7 @@
     <div class="tabs">
         <button class="tab active" onclick="showTab('novo', event)">➕ Novo</button>
         <button class="tab" onclick="showTab('historico', event)">📖 Histórico</button>
+        <button class="tab" onclick="showTab('to', event)">🧠 TO - Crises</button>
         <button class="tab" onclick="showTab('exportar', event)">📤 Exportar</button>
         <button class="tab" onclick="showTab('perfil', event)">👤 Perfil</button>
         <button class="tab" onclick="showTab('ansiedade', event)">📝 Escala Ansiedade</button>
@@ -1966,6 +1969,87 @@
             </div>
         </div>
         <div class="entries-list" id="entriesList"></div>
+    </div>
+
+    <!-- TAB: TO - REGISTRO DE CRISES -->
+    <div id="to" class="tab-content">
+        <h2 style="margin-bottom: 20px;">🧠 Registro de Crises - Terapeuta Ocupacional</h2>
+        
+        <div class="form-group">
+            <label><span class="emoji">📅</span> Data e Hora da Crise</label>
+            <input type="datetime-local" id="toCriseDataHora">
+        </div>
+
+        <div class="form-group">
+            <label><span class="emoji">📆</span> Dia da Semana</label>
+            <select id="toDiaSemana" style="padding: 10px; width: 100%; border-radius: 8px; border: 1px solid var(--border-color);">
+                <option value="">Selecione...</option>
+                <option value="Segunda-feira">Segunda-feira</option>
+                <option value="Terça-feira">Terça-feira</option>
+                <option value="Quarta-feira">Quarta-feira</option>
+                <option value="Quinta-feira">Quinta-feira</option>
+                <option value="Sexta-feira">Sexta-feira</option>
+                <option value="Sábado">Sábado</option>
+                <option value="Domingo">Domingo</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label><span class="emoji">🕐</span> Horário da Crise</label>
+            <input type="time" id="toHorarioCrise" style="padding: 10px; width: 100%; border-radius: 8px; border: 1px solid var(--border-color);">
+        </div>
+
+        <div class="form-group">
+            <label><span class="emoji">⚡</span> Antecedente (O que aconteceu antes?)</label>
+            <textarea id="toAntecedente" placeholder="Descreva o que aconteceu antes da crise..." rows="4"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label><span class="emoji">⏱️</span> Tempo de Duração da Crise</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="number" id="toDuracaoHoras" min="0" max="24" placeholder="Horas" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <span>:</span>
+                <input type="number" id="toDuracaoMinutos" min="0" max="59" placeholder="Minutos" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label><span class="emoji">🎚️</span> Intensidade da Crise (0-10)</label>
+            <div class="intensity-container">
+                <input type="range" min="0" max="10" value="5" class="intensity-slider" id="toIntensidade">
+                <div class="intensity-value" id="toIntensidadeValor">5</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label><span class="emoji">🎯</span> O que Regulação (O que ajudou a acalmar?)</label>
+            <textarea id="toRegulacao" placeholder="Descreva o que ajudou a regular a crise..." rows="4"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label><span class="emoji">✅</span> O que Você Fez Depois</label>
+            <textarea id="toDepois" placeholder="O que você fez após a crise?" rows="4"></textarea>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-secondary" onclick="limparFormularioTO()">🔄 Limpar</button>
+            <button class="btn btn-primary" onclick="salvarRegistroTO()">💾 Salvar</button>
+        </div>
+
+        <div style="margin-top: 40px;">
+            <h3>📋 Registros de Crises</h3>
+            
+            <div style="margin-bottom: 15px;">
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="exportarTOPDF()">📄 Exportar PDF</button>
+                    <button class="btn btn-secondary" onclick="exportarTOCSV()">📊 Exportar CSV</button>
+                    <button class="btn btn-secondary" onclick="exportarTOTexto()">📝 Exportar Texto</button>
+                    <button class="btn btn-secondary" onclick="exportarTOJSON()">📦 Exportar JSON</button>
+                </div>
+            </div>
+            
+            <div id="toHistoricoLista" class="entries-list"></div>
+        </div>
     </div>
 
     <!-- TAB: EXPORTAR -->
@@ -2902,6 +2986,7 @@
             document.getElementById(tabName).classList.add('active');
 
             if (tabName === 'historico') carregarHistorico();
+            if (tabName === 'to') carregarHistoricoTO();
             if (tabName === 'exportar') atualizarEstatisticas();
             if (tabName === 'perfil') carregarPerfilUsuarioNaTela();
             if (tabName === 'admin') verificarAdmin();
@@ -3023,6 +3108,420 @@
             agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
             document.getElementById('dataHora').value = agora.toISOString().slice(0, 16);
         }
+
+        // ==================== FUNÇÕES TO - REGISTRO DE CRISES ====================
+        
+        // Armazenar registros TO em memória
+        let registrosTOEmMemoria = [];
+
+        async function salvarRegistroTO() {
+            const criseDataHora = document.getElementById('toCriseDataHora').value;
+            const diaSemana = document.getElementById('toDiaSemana').value;
+            const horarioCrise = document.getElementById('toHorarioCrise').value;
+            const antecedente = document.getElementById('toAntecedente').value.trim();
+            const duracaoHoras = parseInt(document.getElementById('toDuracaoHoras').value || 0);
+            const duracaoMinutos = parseInt(document.getElementById('toDuracaoMinutos').value || 0);
+            const intensidade = parseInt(document.getElementById('toIntensidade').value);
+            const regulacao = document.getElementById('toRegulacao').value.trim();
+            const depois = document.getElementById('toDepois').value.trim();
+
+            // Validações
+            if (!criseDataHora || !diaSemana || !horarioCrise || !antecedente) {
+                mostrarToast('⚠️ Preencha pelo menos: Data/Hora, Dia da Semana, Horário e Antecedente!');
+                return;
+            }
+
+            if (!currentUser) {
+                mostrarToast('⚠️ Você precisa estar logado para salvar!');
+                return;
+            }
+
+            const registroTO = {
+                id: Date.now(),
+                criseDataHora,
+                diaSemana,
+                horarioCrise,
+                antecedente: sanitizarTexto(antecedente),
+                duracaoHoras,
+                duracaoMinutos,
+                duracao: `${duracaoHoras}h ${duracaoMinutos}min`,
+                intensidade,
+                regulacao: sanitizarTexto(regulacao),
+                depois: sanitizarTexto(depois),
+                uid: currentUser.uid,
+                criadoEm: new Date().toISOString()
+            };
+
+            try {
+                // Salvar no Firestore
+                const docRef = await db.collection('usuarios')
+                    .doc(currentUser.uid)
+                    .collection('registrosTO')
+                    .add(registroTO);
+                
+                registroTO.firebaseId = docRef.id;
+                registrosTOEmMemoria.push(registroTO);
+                
+                mostrarToast('✅ Registro de crise salvo com sucesso!');
+                limparFormularioTO();
+                carregarHistoricoTO();
+            } catch (error) {
+                console.error('Erro ao salvar registro TO:', error);
+                mostrarToast('❌ Erro ao salvar registro: ' + error.message);
+            }
+        }
+
+        function limparFormularioTO() {
+            const agora = new Date();
+            agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
+            document.getElementById('toCriseDataHora').value = agora.toISOString().slice(0, 16);
+            document.getElementById('toDiaSemana').value = '';
+            document.getElementById('toHorarioCrise').value = '';
+            document.getElementById('toAntecedente').value = '';
+            document.getElementById('toDuracaoHoras').value = '';
+            document.getElementById('toDuracaoMinutos').value = '';
+            document.getElementById('toIntensidade').value = 5;
+            document.getElementById('toIntensidadeValor').textContent = '5';
+            document.getElementById('toRegulacao').value = '';
+            document.getElementById('toDepois').value = '';
+        }
+
+        async function carregarHistoricoTO() {
+            if (!currentUser) return;
+
+            const toHistoricoLista = document.getElementById('toHistoricoLista');
+            toHistoricoLista.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">⏳ Carregando...</p>';
+
+            try {
+                const snapshot = await db.collection('usuarios')
+                    .doc(currentUser.uid)
+                    .collection('registrosTO')
+                    .orderBy('criseDataHora', 'desc')
+                    .get();
+
+                registrosTOEmMemoria = [];
+                snapshot.forEach(doc => {
+                    registrosTOEmMemoria.push({
+                        firebaseId: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                if (registrosTOEmMemoria.length === 0) {
+                    toHistoricoLista.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Nenhum registro de crise ainda.</p>';
+                    return;
+                }
+
+                let html = '';
+                registrosTOEmMemoria.forEach(registro => {
+                    const data = new Date(registro.criseDataHora);
+                    const dataFormatada = data.toLocaleDateString('pt-BR');
+                    
+                    html += `
+                        <div class="entry-card" style="margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                <div>
+                                    <strong>📅 ${dataFormatada} - ${registro.diaSemana}</strong>
+                                    <div style="color: var(--text-secondary); font-size: 0.9em;">
+                                        🕐 ${registro.horarioCrise} | ⏱️ Duração: ${registro.duracao} | 🎚️ Intensidade: ${registro.intensidade}/10
+                                    </div>
+                                </div>
+                                <button class="btn-icon" onclick="excluirRegistroTO('${registro.firebaseId}')" title="Excluir">🗑️</button>
+                            </div>
+                            
+                            <div style="margin-top: 10px;">
+                                <strong>⚡ Antecedente:</strong>
+                                <p style="margin: 5px 0;">${registro.antecedente}</p>
+                            </div>
+                            
+                            ${registro.regulacao ? `
+                                <div style="margin-top: 10px;">
+                                    <strong>🎯 O que ajudou (Regulação):</strong>
+                                    <p style="margin: 5px 0;">${registro.regulacao}</p>
+                                </div>
+                            ` : ''}
+                            
+                            ${registro.depois ? `
+                                <div style="margin-top: 10px;">
+                                    <strong>✅ O que fez depois:</strong>
+                                    <p style="margin: 5px 0;">${registro.depois}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+
+                toHistoricoLista.innerHTML = html;
+
+            } catch (error) {
+                console.error('Erro ao carregar histórico TO:', error);
+                toHistoricoLista.innerHTML = '<p style="text-align: center; color: red;">❌ Erro ao carregar registros</p>';
+            }
+        }
+
+        async function excluirRegistroTO(firebaseId) {
+            if (!confirm('Tem certeza que deseja excluir este registro de crise?')) return;
+
+            try {
+                await db.collection('usuarios')
+                    .doc(currentUser.uid)
+                    .collection('registrosTO')
+                    .doc(firebaseId)
+                    .delete();
+
+                registrosTOEmMemoria = registrosTOEmMemoria.filter(r => r.firebaseId !== firebaseId);
+                mostrarToast('✅ Registro excluído com sucesso!');
+                carregarHistoricoTO();
+            } catch (error) {
+                console.error('Erro ao excluir registro TO:', error);
+                mostrarToast('❌ Erro ao excluir registro');
+            }
+        }
+
+        function exportarTOCSV() {
+            if (registrosTOEmMemoria.length === 0) {
+                mostrarToast('⚠️ Nenhum registro de crise para exportar');
+                return;
+            }
+
+            let csv = 'Data,Dia da Semana,Horário,Duração (horas),Duração (minutos),Intensidade,Antecedente,Regulação,O que fez depois\n';
+
+            registrosTOEmMemoria.forEach(r => {
+                const data = new Date(r.criseDataHora);
+                const antecedente = (r.antecedente || '').replace(/"/g, '""').replace(/\n/g, ' ');
+                const regulacao = (r.regulacao || '').replace(/"/g, '""').replace(/\n/g, ' ');
+                const depois = (r.depois || '').replace(/"/g, '""').replace(/\n/g, ' ');
+
+                const linha = [
+                    data.toLocaleDateString('pt-BR'),
+                    r.diaSemana,
+                    r.horarioCrise,
+                    r.duracaoHoras || 0,
+                    r.duracaoMinutos || 0,
+                    r.intensidade,
+                    `"${antecedente}"`,
+                    `"${regulacao}"`,
+                    `"${depois}"`
+                ].join(',');
+                csv += linha + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            baixarArquivo(blob, `registros-crises-TO-${new Date().toISOString().split('T')[0]}.csv`);
+            mostrarToast('📥 CSV de crises baixado!');
+        }
+
+        function exportarTOTexto() {
+            if (registrosTOEmMemoria.length === 0) {
+                mostrarToast('⚠️ Nenhum registro de crise para exportar');
+                return;
+            }
+
+            let texto = 'REGISTRO DE CRISES - TERAPEUTA OCUPACIONAL\n';
+            texto += '='.repeat(60) + '\n\n';
+
+            registrosTOEmMemoria.forEach((r, i) => {
+                const data = new Date(r.criseDataHora);
+                texto += `CRISE ${i + 1}\n`;
+                texto += `Data: ${data.toLocaleDateString('pt-BR')} (${r.diaSemana})\n`;
+                texto += `Horário: ${r.horarioCrise}\n`;
+                texto += `Duração: ${r.duracaoHoras || 0}h ${r.duracaoMinutos || 0}min\n`;
+                texto += `Intensidade: ${r.intensidade}/10\n\n`;
+                
+                texto += `ANTECEDENTE (O que aconteceu antes):\n`;
+                texto += `${r.antecedente || 'Não informado'}\n\n`;
+                
+                if (r.regulacao) {
+                    texto += `O QUE AJUDOU A REGULAR:\n`;
+                    texto += `${r.regulacao}\n\n`;
+                }
+                
+                if (r.depois) {
+                    texto += `O QUE FEZ DEPOIS:\n`;
+                    texto += `${r.depois}\n\n`;
+                }
+                
+                texto += '-'.repeat(60) + '\n\n';
+            });
+
+            const blob = new Blob([texto], { type: 'text/plain;charset=utf-8;' });
+            baixarArquivo(blob, `registros-crises-TO-${new Date().toISOString().split('T')[0]}.txt`);
+            mostrarToast('📥 TXT de crises baixado!');
+        }
+
+        function exportarTOJSON() {
+            if (registrosTOEmMemoria.length === 0) {
+                mostrarToast('⚠️ Nenhum registro de crise para exportar');
+                return;
+            }
+
+            const dados = {
+                exportadoEm: new Date().toISOString(),
+                totalRegistros: registrosTOEmMemoria.length,
+                registros: registrosTOEmMemoria.map(r => ({
+                    data: r.criseDataHora,
+                    diaSemana: r.diaSemana,
+                    horario: r.horarioCrise,
+                    duracao: {
+                        horas: r.duracaoHoras || 0,
+                        minutos: r.duracaoMinutos || 0
+                    },
+                    intensidade: r.intensidade,
+                    antecedente: r.antecedente,
+                    regulacao: r.regulacao,
+                    depois: r.depois
+                }))
+            };
+
+            const json = JSON.stringify(dados, null, 2);
+            const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+            baixarArquivo(blob, `registros-crises-TO-${new Date().toISOString().split('T')[0]}.json`);
+            mostrarToast('📥 JSON de crises baixado!');
+        }
+
+        function exportarTOPDF() {
+            if (registrosTOEmMemoria.length === 0) {
+                mostrarToast('⚠️ Nenhum registro de crise para exportar');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            let y = 20;
+            const margemEsquerda = 15;
+            const larguraPagina = 180;
+            const alturaPagina = 280;
+
+            // Cabeçalho
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('REGISTRO DE CRISES - TO', margemEsquerda, y);
+
+            y += 8;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Terapeuta Ocupacional', margemEsquerda, y);
+            y += 5;
+            doc.text('Exportado em: ' + new Date().toLocaleString('pt-BR'), margemEsquerda, y);
+            y += 5;
+            doc.text('Total de registros: ' + registrosTOEmMemoria.length, margemEsquerda, y);
+            y += 10;
+
+            doc.setLineWidth(0.5);
+            doc.line(margemEsquerda, y, margemEsquerda + larguraPagina, y);
+            y += 10;
+
+            // Registros
+            registrosTOEmMemoria.forEach((reg, index) => {
+                // Verificar se precisa de nova página
+                if (y > alturaPagina - 40) {
+                    doc.addPage();
+                    y = 20;
+                }
+
+                // Número do registro
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Crise #' + (index + 1), margemEsquerda, y);
+                y += 8;
+
+                // Data/Hora
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Data/Hora:', margemEsquerda, y);
+                doc.setFont('helvetica', 'normal');
+                const data = new Date(reg.criseDataHora);
+                doc.text(data.toLocaleDateString('pt-BR') + ' ' + reg.horarioCrise, margemEsquerda + 30, y);
+                y += 7;
+
+                // Dia da Semana
+                doc.setFont('helvetica', 'bold');
+                doc.text('Dia da Semana:', margemEsquerda, y);
+                doc.setFont('helvetica', 'normal');
+                doc.text(reg.diaSemana, margemEsquerda + 40, y);
+                y += 7;
+
+                // Duração
+                doc.setFont('helvetica', 'bold');
+                doc.text('Duracao:', margemEsquerda, y);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`${reg.duracaoHoras || 0}h ${reg.duracaoMinutos || 0}min`, margemEsquerda + 30, y);
+                y += 7;
+
+                // Intensidade
+                doc.setFont('helvetica', 'bold');
+                doc.text('Intensidade:', margemEsquerda, y);
+                doc.setFont('helvetica', 'normal');
+                doc.text(reg.intensidade + '/10', margemEsquerda + 35, y);
+                y += 7;
+
+                // Antecedente
+                if (y > alturaPagina - 30) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.setFont('helvetica', 'bold');
+                doc.text('Antecedente (o que aconteceu antes):', margemEsquerda, y);
+                y += 5;
+                doc.setFont('helvetica', 'normal');
+                const linhasAntecedente = doc.splitTextToSize(reg.antecedente || '', larguraPagina);
+                doc.text(linhasAntecedente, margemEsquerda, y);
+                y += (linhasAntecedente.length * 5) + 2;
+
+                // Regulação
+                if (reg.regulacao) {
+                    if (y > alturaPagina - 30) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('O que ajudou a regular:', margemEsquerda, y);
+                    y += 5;
+                    doc.setFont('helvetica', 'normal');
+                    const linhasRegulacao = doc.splitTextToSize(reg.regulacao, larguraPagina);
+                    doc.text(linhasRegulacao, margemEsquerda, y);
+                    y += (linhasRegulacao.length * 5) + 2;
+                }
+
+                // O que fez depois
+                if (reg.depois) {
+                    if (y > alturaPagina - 25) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('O que fez depois:', margemEsquerda, y);
+                    y += 5;
+                    doc.setFont('helvetica', 'normal');
+                    const linhasDepois = doc.splitTextToSize(reg.depois, larguraPagina);
+                    doc.text(linhasDepois, margemEsquerda, y);
+                    y += (linhasDepois.length * 5) + 8;
+                }
+
+                // Linha separadora
+                if (index < registrosTOEmMemoria.length - 1) {
+                    if (y > alturaPagina - 15) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    doc.setLineWidth(0.3);
+                    doc.setDrawColor(200, 200, 200);
+                    doc.line(margemEsquerda, y, margemEsquerda + larguraPagina, y);
+                    y += 10;
+                }
+            });
+
+            // Salvar PDF com timestamp
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+            const nomeArquivo = `registro_crises_TO_${ts}.pdf`;
+            doc.save(nomeArquivo);
+            mostrarToast('📥 PDF de crises baixado com sucesso!');
+        }
+
+        // ==================== FIM FUNÇÕES TO ====================
 
         // Armazena registros em memória (carregados do Firebase)
         let registrosEmMemoria = [];
@@ -4099,8 +4598,17 @@
             }
         }
 
+        let loginInProgress = false;
+
         async function handleGoogleAuth() {
+            if (loginInProgress) {
+                debugLog('⚠️ Login já em andamento, ignorando clique');
+                return;
+            }
+
             try {
+                loginInProgress = true;
+                
                 // Garantir persistência LOCAL antes de fazer login
                 await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
                 debugLog('🔒 Persistência LOCAL ativada (Google)');
@@ -4109,9 +4617,11 @@
                 await auth.signInWithPopup(provider);
             } catch (error) {
                 console.error('Erro Google:', error);
-                if (error.code !== 'auth/popup-closed-by-user') {
+                if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
                     showError('Erro ao fazer login com Google');
                 }
+            } finally {
+                loginInProgress = false;
             }
         }
 
@@ -5286,6 +5796,22 @@
                 passwordInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') handleEmailAuth();
                 });
+            }
+
+            // Inicializar campos TO
+            const toIntensidade = document.getElementById('toIntensidade');
+            if (toIntensidade) {
+                toIntensidade.addEventListener('input', (e) => {
+                    document.getElementById('toIntensidadeValor').textContent = e.target.value;
+                });
+            }
+
+            // Inicializar data/hora para TO
+            const agora = new Date();
+            agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
+            const toCriseDataHora = document.getElementById('toCriseDataHora');
+            if (toCriseDataHora) {
+                toCriseDataHora.value = agora.toISOString().slice(0, 16);
             }
         });
     </script>
